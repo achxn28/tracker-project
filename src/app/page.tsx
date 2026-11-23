@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { DashboardCalendar } from "@/components/dashboard-calendar";
+import { calendarDeadlines } from "@/lib/dashboard-calendar";
 import { TrackerHeader } from "@/components/tracker-header";
 import { taskUrgency } from "@/lib/task-urgency";
 import { QueueControls } from "@/components/queue-controls";
@@ -60,6 +62,7 @@ export default function Home() {
           <p className="text-xs leading-relaxed text-muted-foreground">America/New_York · Dated work covers today and the next seven days, plus overdue items.</p>
         </section>
 
+        <aside className="min-w-0 space-y-7"><DashboardCalendar today={today} deadlines={calendarDeadlines(data.tasks, activeGoals)} />
         <section className="min-w-0 space-y-4" aria-labelledby="goals-heading">
           <div className="flex flex-wrap items-center justify-between gap-3"><h2 id="goals-heading" className="text-xl font-semibold tracking-tight">Goal progress</h2><Link className="text-sm text-primary underline-offset-4 hover:underline" href="/goals">Manage goals</Link></div>
           {activeGoals.length ? <div className="tracker-panel divide-y overflow-hidden">{activeGoals.map(goal => <Link key={goal.id} href={`/goals?goal=${goal.id}#goal-${goal.id}`} className="block space-y-3 p-5 transition-colors hover:bg-muted/40">
@@ -67,8 +70,7 @@ export default function Home() {
             <div className="h-1.5 overflow-hidden rounded-full bg-muted" role="progressbar" aria-label={goal.title} aria-valuemin={0} aria-valuemax={goal.target_count} aria-valuenow={Math.min(goal.current, goal.target_count)}><div className="h-full rounded-full bg-primary" style={{ width: `${goal.percentage}%` }} /></div>
             <p className="text-sm text-muted-foreground">{goal.completed ? "Completed" : `Due ${displayDate(goal.end_date)}`}</p>
           </Link>)}</div> : <div className="tracker-panel space-y-3 p-5"><p className="text-sm text-muted-foreground">Set a weekly or long-term target to see your progress here.</p><Link className="tracker-button" href="/goals">Create a goal</Link></div>}
-          <Link className="tracker-button w-full" href="/timeline">Open timeline</Link>
-        </section>
+        </section></aside>
       </div>
 
       <section className="space-y-4" aria-labelledby="totals-heading">
