@@ -2,6 +2,27 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+@layer components {
+  .tracker-panel {
+    @apply rounded-xl border bg-card text-card-foreground shadow-sm;
+  }
+  .tracker-button {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50;
+  }
+  .tracker-primary {
+    @apply border-primary bg-primary text-primary-foreground hover:bg-primary/90;
+  }
+  .tracker-danger {
+    @apply border-destructive bg-destructive text-white hover:bg-destructive/90;
+  }
+  .tracker-input {
+    @apply min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2 text-base focus-visible:outline-2 focus-visible:outline-offset-2 aria-invalid:border-destructive;
+  }
+  .tracker-badge {
+    @apply inline-block whitespace-nowrap rounded-md bg-muted px-2 py-1 text-xs font-medium;
+  }
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
