@@ -214,3 +214,26 @@ button:not(:disabled), select { cursor: pointer; }
 @media (prefers-reduced-transparency: reduce) {
   :root, .dark { --glass: var(--card); --control: var(--card); }
 }
+
+/* Due-date tints stay translucent so every task shares the glass surface. */
+.task-urgency { --urgency-rgb: 75 106 111; --urgency-ink: var(--muted-foreground); }
+.task-urgency-green { --urgency-rgb: 60 158 114; --urgency-ink: #246846; }
+.task-urgency-yellow { --urgency-rgb: 207 177 44; --urgency-ink: #776214; }
+.task-urgency-amber { --urgency-rgb: 221 128 45; --urgency-ink: #99500d; }
+.task-urgency-red { --urgency-rgb: 214 76 75; --urgency-ink: #af3137; }
+.dark .task-urgency-green { --urgency-ink: #9cdebb; }
+.dark .task-urgency-yellow { --urgency-ink: #ebd787; }
+.dark .task-urgency-amber { --urgency-ink: #f7bd83; }
+.dark .task-urgency-red { --urgency-ink: #ffb1b4; }
+.task-glass {
+  background-image: linear-gradient(110deg, rgb(var(--urgency-rgb) / 15%), rgb(var(--urgency-rgb) / 3%));
+  border-left: 3px solid rgb(var(--urgency-rgb) / 55%);
+}
+.task-urgency-neutral.task-glass { background-image: none; border-left-color: var(--border); }
+.task-urgency-label { color: var(--urgency-ink); }
+.task-timeline-bar {
+  background: rgb(var(--urgency-rgb) / 25%);
+  border: 1px solid rgb(var(--urgency-rgb) / 45%);
+  color: var(--urgency-ink);
+}
+.task-timeline-marker { background: var(--urgency-ink); }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { TrackerHeader } from "@/components/tracker-header";
+import { taskUrgency } from "@/lib/task-urgency";
 import { QueueControls } from "@/components/queue-controls";
 import { withOpportunities } from "@/lib/opportunities";
 import { buildActionQueue, queueSections, todayInNewYork } from "@/lib/action-queue";
@@ -48,10 +49,10 @@ export default function Home() {
             const items = queue.filter(item => item.section === section);
             return items.length ? <div key={section}>
               <h3 className={`flex items-center justify-between border-y bg-muted/40 px-5 py-3 text-sm font-semibold ${section === "Overdue" ? "text-destructive" : ""}`}><span>{section}</span><span className="tabular-nums">{items.length}</span></h3>
-              <ul className="divide-y">{items.map(item => <li key={`${item.kind}:${item.id}`} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+              <ul className="divide-y">{items.map(item => <li key={`${item.kind}:${item.id}`} className={`flex flex-wrap items-center justify-between gap-3 px-5 py-4 ${item.kind === "task" ? `task-glass task-urgency task-urgency-${taskUrgency(item.date, false, today).tone}` : ""}`}>
                 <div className="min-w-0 flex-1 basis-48"><Link className="break-words font-medium underline-offset-4 hover:underline" href={item.href}>{item.title}</Link>
                   <p className="mt-1 text-sm text-muted-foreground">{item.context}</p>
-                  <div className="mt-2 flex flex-wrap items-center gap-2 text-sm"><span className={section === "Overdue" ? "text-destructive" : "text-muted-foreground"}>{item.date ? displayDate(item.date) : "Ready when you are"}</span>{item.priority === "high" && <span className="tracker-badge">High priority</span>}</div>
+                  <div className="mt-2 flex flex-wrap items-center gap-2 text-sm"><span className={section === "Overdue" ? "text-destructive" : "text-muted-foreground"}>{item.date ? displayDate(item.date) : "Ready when you are"}</span>{item.kind === "task" && <span className="task-urgency-label text-xs font-medium">{taskUrgency(item.date, false, today).label}</span>}{item.priority === "high" && <span className="tracker-badge">High priority</span>}</div>
                 </div><QueueControls item={item} />
               </li>)}</ul>
             </div> : null;
