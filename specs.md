@@ -13,6 +13,26 @@ Implemented milestones cover opportunity creation, listing, viewing, editing,
 deletion, manual activity logging, task management, and the dashboard action queue.
 Measurable goals and the shared task/goal timeline are also implemented.
 
+## Current MVP scope
+
+The current implementation follows the later product decisions: a personal,
+desktop-first app on this computer, with SQLite persistence and no sign-in.
+Supabase, RLS, authentication, and online deployment in the original phases below
+are deferred. Development and production servers bind to localhost.
+
+Implemented: opportunity CRUD, manual activity logging, tasks and action queue,
+measurable goals, the unified daily/week/month timeline, search and combined
+filters, table and status-board views, reversible archiving, CSV exports, theme,
+and a configurable follow-up interval. The desktop layout uses a left sidebar.
+Board cards open the editor for status changes; dragging cards is not included.
+
+Goal progress comes from explicit saved events. Positive replies are marked by
+the user, and received and accepted offers are separate activities. Archived
+opportunities retain their recorded history and metric credit. CSV exports cover
+opportunities and activities; full local backups use the stopped SQLite file.
+
+Gmail tracking, AI integrations, scraping, and external APIs remain out of scope.
+
 ## 1. Product Overview
 
 Build a personal web application to manage the process of securing a software engineering internship or computer science research opportunity for summer 2027.
@@ -103,9 +123,10 @@ linked tasks and next actions (same title and date) appear once. Ready-for-outre
 items are omitted when the opportunity already has queued work.
 
 Clearing a next action removes its planning fields; it does not log outreach.
-The local dashboard initially displays the three supported distinct outreach and
-application totals, plus recent logged activities and task completions. Other goal
-and response metrics remain future work.
+The local dashboard displays distinct research contacts, startup contacts, formal
+applications, positive responses, completed meetings/interviews, and offers
+received, plus active goal progress and recent activities/task completions. Offer
+acceptance is tracked separately through accepted-offer goals.
 
 ### Goal Progress
 

@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { BriefcaseBusiness } from "lucide-react";
 
-export function TrackerHeader({ active }: { active: "dashboard" | "opportunities" | "tasks" | "goals" | "timeline" }) {
-  return <header className="border-b bg-background">
-    <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-5 sm:px-8">
+export function TrackerHeader({ active }: { active: "dashboard" | "opportunities" | "tasks" | "goals" | "timeline" | "settings" }) {
+  return <header className="border-b bg-background lg:fixed lg:inset-y-0 lg:left-0 lg:z-30 lg:w-56 lg:overflow-y-auto lg:border-b-0 lg:border-r">
+    <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-5 sm:px-8 lg:flex-col lg:items-start lg:px-4 lg:py-7">
       <Link href="/" className="flex items-center gap-3 font-semibold tracking-tight"><BriefcaseBusiness className="size-5" aria-hidden="true" />Opportunity Tracker</Link><span className="text-sm text-muted-foreground">Summer 2027</span>
     </div>
-    <nav className="mx-auto flex max-w-6xl flex-wrap gap-x-6 gap-y-2 px-5 sm:px-8" aria-label="Main navigation">
-      {([["dashboard", "/", "Dashboard"], ["timeline", "/timeline", "Timeline"], ["opportunities", "/opportunities", "Opportunities"], ["tasks", "/tasks", "Tasks"], ["goals", "/goals", "Goals"]] as const).map(([key, href, label]) => <Link key={key} href={href} aria-current={active === key ? "page" : undefined} className={`border-b-2 pb-3 text-sm font-medium ${active === key ? "border-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>{label}</Link>)}
+    <nav className="mx-auto flex max-w-6xl flex-wrap gap-x-6 gap-y-2 px-5 sm:px-8 lg:flex-col lg:gap-2 lg:px-4" aria-label="Main navigation">
+      {([["dashboard", "/", "Dashboard"], ["timeline", "/timeline", "Timeline"], ["opportunities", "/opportunities", "Opportunities"], ["tasks", "/tasks", "Tasks"], ["goals", "/goals", "Goals"], ["settings", "/settings", "Settings"]] as const).map(([key, href, label]) => <Link key={key} href={href} aria-current={active === key ? "page" : undefined} className={`border-b-2 pb-3 text-sm font-medium lg:rounded-lg lg:border-b-0 lg:border-l-2 lg:px-3 lg:py-3 ${active === key ? "border-primary lg:bg-muted" : "border-transparent text-muted-foreground hover:text-foreground lg:hover:bg-muted/50"}`}>{label}</Link>)}
     </nav>
   </header>;
 }

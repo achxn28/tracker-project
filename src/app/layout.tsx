@@ -12,7 +12,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   const theme = (await cookies()).get("tracker_theme")?.value;
   return (
     <html lang="en" className={theme === "dark" ? "dark" : undefined}>
-      <body>{children}</body>
+      <body className="lg:pl-56">{children}</body>
     </html>
   );
 }

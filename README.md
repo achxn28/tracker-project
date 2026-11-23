@@ -1,7 +1,8 @@
 # Summer 2027 Opportunity Tracker
 
 A local personal research outreach and internship tracker with opportunity creation,
-viewing, editing, deletion, manual activity logging, tasks, and an action queue.
+viewing, editing, archiving, manual activity logging, tasks, goals, a shared timeline,
+and an action queue.
 Product requirements are documented in [specs.md](specs.md).
 
 ## Stack
@@ -22,7 +23,8 @@ npm run dev
 ```
 
 Open [localhost:3000](http://localhost:3000). The homepage opens the dashboard.
-Use the navigation to switch between Dashboard, Opportunities, and Tasks.
+Use the navigation to switch between Dashboard, Timeline, Opportunities, Tasks,
+Goals, and Settings.
 Both development and production servers bind to `127.0.0.1` for local use.
 There is no sign-in or cloud database.
 
@@ -65,7 +67,8 @@ an open opportunity as rejected. Logging never regresses a later stage or reopen
 a closed record. Backdated activities are retained without replacing newer
 pipeline information.
 
-For emails, an optional follow-up date is suggested seven calendar days later.
+For emails, an optional follow-up date is suggested seven calendar days later by
+default. Change this interval in Settings.
 Checking **Set a follow-up date** saves it as the opportunity's Next action.
 Existing custom next actions are preserved unless you explicitly choose to replace them.
 Repeated emails and follow-ups do not inflate distinct initial outreach counts.
@@ -92,7 +95,7 @@ Completed tasks and undated work do not appear as due work in the queue.
 A linked task matching an opportunity's next-action title and date appears once.
 Completing that task clears the matching next action. Clearing an action from the
 dashboard removes its plan without recording an email or increasing outreach
-counts. Three outreach totals use distinct recorded opportunities; recent activity
+counts. Dashboard milestone totals use distinct recorded opportunities; recent activity
 includes logged events and task completions.
 
 ## Goals
@@ -119,3 +122,38 @@ Blocks use saved start/end dates; due-date-only tasks use diamond markers. Tasks
 without due dates stay in a separate list without invented schedule ranges.
 Goal fill shows measured progress, never elapsed time. Select a row or block to
 open the task or goal. Clipped blocks continue outside the selected date range.
+
+
+## Opportunity views and archiving
+
+Search by organization, contact, title, or focus. Combine type, status, priority,
+deadline, and archive filters, then sort by newest saved, pipeline, type, priority,
+deadline, or last recorded activity. The table and status board share the filters.
+Select a board card to open its details and edit its status.
+
+Archive an opportunity from its details to hide it from the default list and
+opportunity action queue. Archived records retain their activities and goal credit.
+Their independent pending tasks remain actionable. Use the archive filter to find
+and restore records.
+
+## Settings and exports
+
+Settings saves a follow-up interval from 1 to 365 calendar days in SQLite. Theme
+choice uses a browser cookie and persists across refreshes. New follow-up suggestions
+use the interval; saved reminders keep their dates until edited.
+
+Download all opportunities or all activities from Settings as UTF-8 CSV, including
+archived records. CSV cells preserve commas, quotes, and line breaks, and potential
+spreadsheet formulas are escaped as text. Activity timestamps use UTC. CSV exports
+are for viewing your records; copy the stopped SQLite database for a full backup
+that includes tasks, goals, and preferences. CSV import is not included.
+
+## Manual MVP check
+
+For a clean test without your saved data, set `OPPORTUNITY_DB_PATH` to a temporary
+SQLite path before starting the server. Add an opportunity, log initial outreach,
+and add a goal for that opportunity type. Verify that a repeat email does not add
+a new contact, while a new contact updates the goal. Create a ranged task and a
+due-date-only task, then inspect Days and Months on Timeline. Check the dashboard,
+archive and restore an opportunity, save preferences, and download both CSV files.
+Restart the server with the same database path to verify persistence.
