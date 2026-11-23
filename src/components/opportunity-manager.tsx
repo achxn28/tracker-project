@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { BriefcaseBusiness, FolderOpen, Plus } from "lucide-react";
 import { saveOpportunity, deleteOpportunity } from "@/app/opportunities/actions";
 import { arrangements, displayDate, opportunityTypes, outcomes, priorities, statuses, statusLabel, type Opportunity } from "@/lib/opportunity-model";
+import { ActivityLog } from "@/components/activity-log";
 
 const detailFields = [
   ["contact_name", "Contact name"], ["contact_email", "Contact email"], ["website_url", "Website"], ["application_url", "Application URL"],
@@ -94,8 +95,12 @@ export function OpportunityManager({ initialOpportunities }: { initialOpportunit
             return <div className="min-w-0" key={key}><dt className="text-sm font-medium text-muted-foreground">{label}</dt><dd className="mt-2 whitespace-pre-wrap break-words">{value && key.endsWith("_url") ? <a className="underline underline-offset-4" href={value} target="_blank" rel="noreferrer">{value}</a> : value || "—"}</dd></div>;
           })}
         </dl>
+        <ActivityLog key={selected.id} opportunity={selected} onUpdated={saved => {
+          setOpportunities(current => current.map(item => item.id === saved.id ? saved : item));
+          setSelected(current => current?.id === saved.id ? saved : current);
+        }} />
         <section className="mt-8 border-t pt-6" aria-label="Delete opportunity">
-          {confirming ? <div className="space-y-3"><h2 className="font-semibold">Delete {selected.organization_name}?</h2><p className="text-sm text-muted-foreground">This permanently deletes this opportunity and its saved details.</p><div className="flex flex-wrap gap-3">
+          {confirming ? <div className="space-y-3"><h2 className="font-semibold">Delete {selected.organization_name}?</h2><p className="text-sm text-muted-foreground">This permanently deletes this opportunity, its saved details, and its activity history.</p><div className="flex flex-wrap gap-3">
             <button className="tracker-button tracker-danger" disabled={pending} onClick={() => startTransition(async () => {
               try {
                 const result = await deleteOpportunity(selected.id);

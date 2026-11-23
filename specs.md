@@ -9,8 +9,8 @@ SQLite database, bind the app server to `127.0.0.1`, and omit authentication.
 This decision supersedes the Supabase, user-account/RLS, and Vercel hosting
 requirements below for the local version. User ownership columns are unnecessary
 in the local database. Keep the remaining product workflows and timeline scope.
-The current implementation milestone is opportunity creation, listing, viewing,
-editing, and deletion; the other workflows remain future work.
+Implemented milestones cover opportunity creation, listing, viewing, editing,
+deletion, and manual activity logging; the other workflows remain future work.
 
 ## 1. Product Overview
 
@@ -205,6 +205,24 @@ Subsequent follow-up emails must not count as new initial outreach.
 For recruiting statistics, count distinct opportunities contacted rather than the total number of emails sent.
 
 All email activity is entered manually in the MVP.
+
+For the local implementation, activity history is newest first. Activity times
+are entered and displayed in America/New_York and stored in UTC. Nonexistent
+spring daylight-saving times are rejected; repeated fall times use their earlier
+occurrence. Follow-up suggestions use calendar days in New York.
+
+Logging initial emails or applications advances early stages to Contacted /
+Applied. Replies, meetings/interviews, and offers can advance their corresponding
+stages. A rejection closes an open opportunity as rejected. Activity logging must
+not regress later stages, reopen closed opportunities, or overwrite newer
+pipeline information with backdated events.
+
+Saving a suggested or adjusted follow-up date requires explicit selection and
+sets the opportunity's Next action to Send follow-up email. Otherwise preserve the
+existing next action. Closed opportunities must be reopened manually before a
+follow-up can be scheduled. Deleting an opportunity deletes its linked activity
+history, and the confirmation must explain this. Recruiting outreach counts use
+distinct opportunities with initial emails; follow-ups alone do not count.
 
 ## 7. Goals and Milestones
 
