@@ -24,7 +24,7 @@ export function DashboardCalendar({ today, deadlines }: { today: string; deadlin
         <div className="grid grid-cols-7 gap-1" role="group" aria-label="Choose a calendar date">{dates.map(date => {
           const count = counts.get(date) ?? 0;
           return <button key={date} className={`relative flex min-h-11 items-center justify-center rounded-xl text-sm tabular-nums transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 ${selected === date ? "bg-primary text-primary-foreground" : date === today ? "bg-primary/10 font-semibold text-primary ring-1 ring-inset ring-primary/30" : date.slice(0, 7) !== month.slice(0, 7) ? "text-muted-foreground/60 hover:bg-muted" : "hover:bg-muted"}`} aria-pressed={selected === date} aria-current={date === today ? "date" : undefined} aria-label={`${formatDate(date, { weekday: "long", month: "long", day: "numeric", year: "numeric" })}${date === today ? ", today" : ""}, ${count} ${count === 1 ? "deadline" : "deadlines"}`} onClick={() => { setSelected(date); if (date.slice(0, 7) !== month.slice(0, 7)) setMonth(`${date.slice(0, 7)}-01`); }}>
-            <span>{Number(date.slice(8))}</span>{count > 0 && <span aria-hidden="true" className={`absolute bottom-0.5 right-1 rounded px-1 text-[10px] leading-tight ${selected === date ? "bg-white/20" : "bg-primary/12 text-primary"}`}>{count}</span>}
+            <span>{Number(date.slice(8))}</span>{count > 0 && <span aria-hidden="true" className={`absolute bottom-0.5 right-1 rounded px-1 text-xs leading-tight ${selected === date ? "bg-white/20" : "bg-primary/12 text-primary"}`}>{count}</span>}
           </button>;
         })}</div>
       </div>

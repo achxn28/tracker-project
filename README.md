@@ -157,3 +157,18 @@ a new contact, while a new contact updates the goal. Create a ranged task and a
 due-date-only task, then inspect Days and Months on Timeline. Check the dashboard,
 archive and restore an opportunity, save preferences, and download both CSV files.
 Restart the server with the same database path to verify persistence.
+
+
+## Workspace appearance and calendar
+
+The workspace uses translucent glass panels in light and dark themes, with
+text-only navigation and actions. The dashboard puts due work first and includes
+a month calendar. Select a day to see pending task and unfinished active goal
+deadlines, or open the full timeline for planned ranges. Undated tasks do not
+receive invented calendar dates.
+
+Task cards, dashboard task rows, and timeline task blocks use the same due-date
+colors: green for more than seven days remaining, yellow for four to seven days,
+amber for one to three days, and red for today or overdue. Text labels retain the
+actual dates and remaining time. Completed and undated tasks are neutral. Date
+colors use the New York calendar date when the page loads or refreshes.

@@ -24,6 +24,9 @@ Implemented: opportunity CRUD, manual activity logging, tasks and action queue,
 measurable goals, the unified daily/week/month timeline, search and combined
 filters, table and status-board views, reversible archiving, CSV exports, theme,
 and a configurable follow-up interval. The desktop layout uses a left sidebar.
+The dashboard also includes a month calendar with a selected-day agenda for
+pending tasks and unfinished active goal deadlines. Use clear glass surfaces,
+text-only navigation, and green/yellow/amber/red task urgency as dates approach.
 Board cards open the editor for status changes; dragging cards is not included.
 
 Goal progress comes from explicit saved events. Positive replies are marked by
