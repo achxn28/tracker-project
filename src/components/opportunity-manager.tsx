@@ -18,7 +18,7 @@ const detailFields = [
   ["fit_notes", "Why this opportunity is relevant"], ["outreach_notes", "Personalization notes for outreach"], ["notes", "General notes"],
 ] as const;
 
-export function OpportunityManager({ initialOpportunities, initialTasks, initialSelectedId, lastActivity, today }: { initialOpportunities: Opportunity[]; initialTasks: Task[]; initialSelectedId: string; lastActivity: Record<string, string>; today: string }) {
+export function OpportunityManager({ initialOpportunities, initialTasks, initialSelectedId, lastActivity, today, followUpDays }: { initialOpportunities: Opportunity[]; initialTasks: Task[]; initialSelectedId: string; lastActivity: Record<string, string>; today: string; followUpDays: number }) {
   const [opportunities, setOpportunities] = useState(initialOpportunities);
   const [selected, setSelected] = useState<Opportunity | null>(initialOpportunities.find(item => item.id === initialSelectedId) ?? null);
   const [editing, setEditing] = useState(false);
@@ -116,7 +116,7 @@ export function OpportunityManager({ initialOpportunities, initialTasks, initial
             return <div className="min-w-0" key={key}><dt className="text-sm font-medium text-muted-foreground">{label}</dt><dd className="mt-2 whitespace-pre-wrap break-words">{value && key.endsWith("_url") ? <a className="underline underline-offset-4" href={value} target="_blank" rel="noreferrer">{value}</a> : value || "—"}</dd></div>;
           })}
         </dl>
-        <ActivityLog key={selected.id} opportunity={selected} onUpdated={saved => {
+        <ActivityLog key={selected.id} opportunity={selected} followUpDays={followUpDays} onUpdated={saved => {
           setOpportunities(current => current.map(item => item.id === saved.id ? saved : item));
           setSelected(current => current?.id === saved.id ? saved : current);
         }} />

@@ -69,6 +69,10 @@ export function openOpportunityStore(filename: string) {
       updated_at TEXT NOT NULL,
       CHECK (start_date <= end_date)
     ) STRICT;
+    CREATE TABLE IF NOT EXISTS preferences (
+      id INTEGER PRIMARY KEY CHECK (id = 1),
+      follow_up_days INTEGER NOT NULL CHECK (follow_up_days BETWEEN 1 AND 365)
+    ) STRICT;
   `);
   if (!db.prepare("PRAGMA table_info(opportunities)").all().some(column => column.name === "archived_at")) {
     db.exec("BEGIN IMMEDIATE");
@@ -100,6 +104,10 @@ export function openOpportunityStore(filename: string) {
     } catch (error) { db.exec("ROLLBACK"); db.close(); throw error; }
   }
   return {
+    preferences: () => ({ ...(db.prepare("SELECT follow_up_days FROM preferences WHERE id = 1").get() ?? { follow_up_days: 7 }) }) as { follow_up_days: number },
+    setFollowUpDays(days: number) {
+      db.prepare("INSERT INTO preferences (id, follow_up_days) VALUES (1, ?) ON CONFLICT(id) DO UPDATE SET follow_up_days = excluded.follow_up_days").run(days);
+    },
     list: () => db.prepare("SELECT * FROM opportunities ORDER BY created_at DESC, id DESC").all().map(row => ({ ...row })) as Opportunity[],
     get(id: string) {
       const row = db.prepare("SELECT * FROM opportunities WHERE id = ?").get(id);

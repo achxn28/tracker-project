@@ -5,7 +5,7 @@ import { getActivities, logActivity } from "@/app/opportunities/actions";
 import { activityTypes, displayActivityTime, isOutreach, newYorkInput, suggestedFollowUp, type Activity, type ActivityType } from "@/lib/activity-model";
 import type { Opportunity } from "@/lib/opportunity-model";
 
-export function ActivityLog({ opportunity, onUpdated }: { opportunity: Opportunity; onUpdated: (saved: Opportunity) => void }) {
+export function ActivityLog({ opportunity, onUpdated, followUpDays = 7 }: { opportunity: Opportunity; onUpdated: (saved: Opportunity) => void; followUpDays?: number }) {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [retry, setRetry] = useState(0);
@@ -22,7 +22,7 @@ export function ActivityLog({ opportunity, onUpdated }: { opportunity: Opportuni
   const [success, setSuccess] = useState("");
   const [pending, startTransition] = useTransition();
   const id = opportunity.id;
-  const followUp = customDate ?? suggestedFollowUp(when);
+  const followUp = customDate ?? suggestedFollowUp(when, followUpDays);
 
   useEffect(() => {
     let active = true;
@@ -72,7 +72,7 @@ export function ActivityLog({ opportunity, onUpdated }: { opportunity: Opportuni
         {type === "Reply received" && <div className="sm:col-span-2"><label className="flex min-h-11 items-center gap-3 text-sm font-medium"><input name="positive_response" type="checkbox" className="size-4" checked={positive} onChange={event => setPositive(event.target.checked)} />This is a positive response</label>{error("positive_response")}</div>}
         {isOutreach(type) && opportunity.status !== "Closed" && <div className="space-y-3 sm:col-span-2">
           <label className="flex min-h-11 items-center gap-3 text-sm font-medium"><input name="schedule_follow_up" type="checkbox" checked={schedule} onChange={event => setSchedule(event.target.checked)} className="size-4" />Set a follow-up date</label>
-          <p className="text-sm text-muted-foreground">Suggested seven days after this email. Accept it or choose another date.{opportunity.next_action || opportunity.next_action_date ? " This will replace the current Next action and its date." : ""}</p>
+          <p className="text-sm text-muted-foreground">Suggested {followUpDays} calendar days after this email. Accept it or choose another date.{opportunity.next_action || opportunity.next_action_date ? " This will replace the current Next action and its date." : ""}</p>
           <label className="block max-w-xs text-sm font-medium" htmlFor="activity-follow-up">Follow-up date<input id="activity-follow-up" name="follow_up_date" type="date" className="tracker-input mt-2" disabled={!schedule} required={schedule} value={followUp} onChange={event => setCustomDate(event.target.value)} aria-invalid={Boolean(errors.follow_up_date)} aria-describedby={errors.follow_up_date ? "activity-follow_up_date-error" : undefined} /></label>
           {error("follow_up_date")}{error("schedule_follow_up")}
         </div>}

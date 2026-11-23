@@ -38,10 +38,10 @@ export function isOutreach(type: string) {
   return type === "Initial email sent" || type === "Follow-up email sent";
 }
 
-export function suggestedFollowUp(local: string) {
+export function suggestedFollowUp(local: string, interval = 7) {
   if (!newYorkInstant(local)) return "";
   const date = new Date(`${local.slice(0, 10)}T12:00:00Z`);
-  date.setUTCDate(date.getUTCDate() + 7);
+  date.setUTCDate(date.getUTCDate() + interval);
   return date.toISOString().slice(0, 10);
 }
 
