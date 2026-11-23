@@ -6,7 +6,7 @@ export function TrackerHeader({ active }: { active: "dashboard" | "opportunities
       <Link href="/" className="flex items-center gap-3 text-lg font-semibold tracking-tight">Opportunity Tracker</Link><span className="text-sm text-muted-foreground">Summer 2027</span>
     </div>
     <nav className="mx-auto flex max-w-6xl flex-wrap gap-x-6 gap-y-2 px-5 sm:px-8 lg:flex-col lg:gap-2 lg:px-4" aria-label="Main navigation">
-      {([["dashboard", "/", "Dashboard"], ["timeline", "/timeline", "Timeline"], ["opportunities", "/opportunities", "Opportunities"], ["tasks", "/tasks", "Tasks"], ["goals", "/goals", "Goals"], ["settings", "/settings", "Settings"]] as const).map(([key, href, label]) => <Link key={key} href={href} aria-current={active === key ? "page" : undefined} className={`border-b-2 pb-3 text-sm font-medium lg:rounded-lg lg:border-b-0 lg:border-l-2 lg:px-3 lg:py-3 ${active === key ? "border-primary bg-primary/8 text-primary" : "border-transparent text-muted-foreground hover:bg-muted hover:text-foreground"}`}>{label}</Link>)}
+      {([["dashboard", "/", "Dashboard"], ["timeline", "/timeline", "Timeline"], ["opportunities", "/opportunities", "Opportunities"], ["tasks", "/tasks", "Tasks"], ["goals", "/goals", "Goals"], ["settings", "/settings", "Settings"]] as const).map(([key, href, label]) => <Link key={key} href={href} aria-current={active === key ? "page" : undefined} className={`border-b-2 pb-3 text-sm font-medium lg:rounded-sm lg:border-b-0 lg:border-l-2 lg:px-3 lg:py-3 ${active === key ? "border-primary bg-primary/8 text-primary" : "border-transparent text-muted-foreground hover:bg-muted hover:text-foreground"}`}>{label}</Link>)}
     </nav>
   </header>;
 }

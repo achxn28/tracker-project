@@ -4,7 +4,7 @@
 
 @layer components {
   .tracker-panel {
-    @apply rounded-2xl border text-card-foreground;
+    @apply rounded-sm border text-card-foreground;
     background: var(--glass);
     border-color: var(--glass-edge);
     box-shadow: var(--glass-shadow);
@@ -12,7 +12,7 @@
     backdrop-filter: blur(14px);
   }
   .tracker-button {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border px-4 py-2 text-sm font-medium transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50;
     background-color: var(--control);
     box-shadow: none;
   }
@@ -26,11 +26,11 @@
     background-color: var(--destructive);
   }
   .tracker-input {
-    @apply min-h-11 w-full rounded-xl border border-input px-3 py-2 text-base focus-visible:outline-2 focus-visible:outline-offset-2 aria-invalid:border-destructive;
+    @apply min-h-11 w-full rounded-sm border border-input px-3 py-2 text-base focus-visible:outline-2 focus-visible:outline-offset-2 aria-invalid:border-destructive;
     background-color: var(--control);
   }
   .tracker-badge {
-    @apply inline-block whitespace-nowrap rounded-md bg-muted px-2 py-1 text-xs font-medium;
+    @apply inline-block whitespace-nowrap rounded-sm bg-muted px-2 py-1 text-xs font-medium;
   }
 }
 
@@ -108,7 +108,7 @@
     --chart-3: oklch(0.439 0 0);
     --chart-4: oklch(0.371 0 0);
     --chart-5: oklch(0.269 0 0);
-    --radius: 0.625rem;
+    --radius: 0.25rem;
     --sidebar: oklch(0.985 0 0);
     --sidebar-foreground: oklch(0.145 0 0);
     --sidebar-primary: oklch(0.205 0 0);
