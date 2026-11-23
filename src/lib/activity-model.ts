@@ -3,11 +3,11 @@ import type { Opportunity } from "./opportunity-model.ts";
 export const activityTypes = [
   "Initial email sent", "Follow-up email sent", "Reply received", "Application submitted",
   "Meeting scheduled", "Meeting completed", "Interview completed", "Offer received",
-  "Rejection received", "General note",
+  "Rejection received", "General note", "Offer accepted",
 ] as const;
 export type ActivityType = typeof activityTypes[number];
-export type ActivityInput = { activity_type: ActivityType; occurred_at: string; notes: string | null; follow_up_date: string | null };
-export type Activity = Omit<ActivityInput, "follow_up_date"> & { id: string; opportunity_id: string; created_at: string };
+export type ActivityInput = { activity_type: ActivityType; occurred_at: string; notes: string | null; follow_up_date: string | null; positive_response?: boolean };
+export type Activity = Omit<ActivityInput, "follow_up_date" | "positive_response"> & { id: string; opportunity_id: string; created_at: string; positive_response: number };
 
 const formatter = new Intl.DateTimeFormat("en-CA", {
   timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit",
@@ -57,6 +57,8 @@ export function parseActivity(raw: Record<string, unknown>): { data: ActivityInp
   const errors: Record<string, string> = {};
   const type = text("activity_type") as ActivityType;
   if (!activityTypes.includes(type)) errors.activity_type = "Choose a valid activity type.";
+  const positive_response = raw.positive_response === "on";
+  if (positive_response && type !== "Reply received") errors.positive_response = "Only replies can be marked positive.";
   const occurred_at = newYorkInstant(text("occurred_at"));
   if (!occurred_at) errors.occurred_at = "Enter a valid New York date and time. Times skipped during daylight saving changes are not valid.";
   let follow_up_date: string | null = null;
@@ -67,7 +69,7 @@ export function parseActivity(raw: Record<string, unknown>): { data: ActivityInp
     if (!/^\d{4}-\d{2}-\d{2}$/.test(follow_up_date) || !Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== follow_up_date) errors.follow_up_date = "Enter a valid follow-up date.";
   }
   if (Object.keys(errors).length) return { errors };
-  return { data: { activity_type: type, occurred_at: occurred_at!, notes: text("notes") || null, follow_up_date } };
+  return { data: { activity_type: type, occurred_at: occurred_at!, notes: text("notes") || null, follow_up_date, positive_response } };
 }
 
 export function pipelineAfterActivity(opportunity: Opportunity, type: ActivityType) {
@@ -77,7 +79,7 @@ export function pipelineAfterActivity(opportunity: Opportunity, type: ActivityTy
   const targets: Partial<Record<ActivityType, Opportunity["status"]>> = {
     "Initial email sent": "Contacted / Applied", "Application submitted": "Contacted / Applied",
     "Reply received": "Responded", "Meeting scheduled": "Meeting / Interview",
-    "Meeting completed": "Meeting / Interview", "Interview completed": "Meeting / Interview", "Offer received": "Offer",
+    "Meeting completed": "Meeting / Interview", "Interview completed": "Meeting / Interview", "Offer received": "Offer", "Offer accepted": "Offer",
   };
   const progression = ["Saved", "Researching", "Ready for Outreach", "Contacted / Applied", "Responded", "Meeting / Interview", "Offer"];
   const target = targets[type];
