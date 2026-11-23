@@ -38,10 +38,10 @@ export function ActivityLog({ opportunity, onUpdated, followUpDays = 7 }: { oppo
   function error(key: string) {
     return errors[key] ? <p className="mt-2 text-sm text-destructive" id={`activity-${key}-error`}>{errors[key]}</p> : null;
   }
-  return <section className="tracker-panel mt-7 space-y-5 p-6" aria-labelledby="activity-heading">
+  return <section className="tracker-panel space-y-5 p-6" aria-labelledby="activity-heading">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div><h2 id="activity-heading" className="text-lg font-semibold">Activity history</h2><p className="mt-1 text-sm text-muted-foreground">Record outreach, applications, replies, and outcomes.</p></div>
-      {!adding && <button className="tracker-button" disabled={loading || pending} onClick={() => { setWhen(newYorkInput()); setCustomDate(null); setSchedule(false); setErrors({}); setMessage(""); setSuccess(""); setAdding(true); }}>Log activity</button>}
+      {!adding && <button className="tracker-button tracker-primary" disabled={loading || pending} onClick={() => { setWhen(newYorkInput()); setCustomDate(null); setSchedule(false); setErrors({}); setMessage(""); setSuccess(""); setAdding(true); }}>Log activity</button>}
     </div>
     {success && <p role="status" className="text-sm">{success}</p>}
     {adding && <form onSubmit={event => {
