@@ -1,10 +1,14 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { BriefcaseBusiness, FolderOpen, Plus } from "lucide-react";
+import { FolderOpen, Plus } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { saveOpportunity, deleteOpportunity } from "@/app/opportunities/actions";
 import { arrangements, displayDate, opportunityTypes, outcomes, priorities, statuses, statusLabel, type Opportunity } from "@/lib/opportunity-model";
 import { ActivityLog } from "@/components/activity-log";
+import { TrackerHeader } from "@/components/tracker-header";
+import type { Task } from "@/lib/task-model";
 
 const detailFields = [
   ["contact_name", "Contact name"], ["contact_email", "Contact email"], ["website_url", "Website"], ["application_url", "Application URL"],
@@ -13,18 +17,19 @@ const detailFields = [
   ["fit_notes", "Why this opportunity is relevant"], ["outreach_notes", "Personalization notes for outreach"], ["notes", "General notes"],
 ] as const;
 
-export function OpportunityManager({ initialOpportunities }: { initialOpportunities: Opportunity[] }) {
+export function OpportunityManager({ initialOpportunities, initialTasks, initialSelectedId }: { initialOpportunities: Opportunity[]; initialTasks: Task[]; initialSelectedId: string }) {
   const [opportunities, setOpportunities] = useState(initialOpportunities);
-  const [selected, setSelected] = useState<Opportunity | null>(null);
+  const [selected, setSelected] = useState<Opportunity | null>(initialOpportunities.find(item => item.id === initialSelectedId) ?? null);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [message, setMessage] = useState("");
   const [confirming, setConfirming] = useState(false);
   const [pending, startTransition] = useTransition();
+  const router = useRouter();
 
   function clearFeedback() { setErrors({}); setMessage(""); setConfirming(false); }
-  function showList() { setSelected(null); setEditing(false); clearFeedback(); }
+  function showList() { setSelected(null); setEditing(false); clearFeedback(); router.replace("/opportunities"); }
   function edit(item: Opportunity | null) {
     setSelected(item);
     setDraft(Object.fromEntries(Object.entries(item ?? { type: "Research", status: "Saved", priority: "medium", work_arrangement: "unspecified" }).map(([key, value]) => [key, value ?? ""])));
@@ -48,9 +53,7 @@ export function OpportunityManager({ initialOpportunities }: { initialOpportunit
   }
   const title = editing ? selected ? "Edit opportunity" : "Add opportunity" : selected ? selected.organization_name : "Opportunities";
   return <div className="min-h-svh bg-muted/25">
-    <header className="border-b bg-background"><div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-5 sm:px-8">
-      <button className="flex items-center gap-3 font-semibold tracking-tight" onClick={showList} disabled={pending}><BriefcaseBusiness className="size-5" aria-hidden="true" /> Opportunity Tracker</button><span className="text-sm text-muted-foreground">Summer 2027</span>
-    </div></header>
+    <TrackerHeader active="opportunities" />
     <main className={`mx-auto px-5 py-8 sm:px-8 sm:py-10 ${editing ? "max-w-3xl" : "max-w-6xl"}`}>
       {(selected || editing) && <button className="mb-5 text-sm text-muted-foreground underline-offset-4 hover:underline" onClick={showList} disabled={pending}>All opportunities</button>}
       <div className="mb-7 flex flex-wrap items-start justify-between gap-5">
@@ -99,8 +102,11 @@ export function OpportunityManager({ initialOpportunities }: { initialOpportunit
           setOpportunities(current => current.map(item => item.id === saved.id ? saved : item));
           setSelected(current => current?.id === saved.id ? saved : current);
         }} />
+        <section className="tracker-panel mt-7 space-y-4 p-6" aria-labelledby="linked-tasks-heading"><div className="flex flex-wrap items-center justify-between gap-3"><h2 id="linked-tasks-heading" className="text-lg font-semibold">Linked tasks</h2><Link className="tracker-button" href={`/tasks?opportunity=${selected.id}&new=1`}>Add linked task</Link></div>
+          {initialTasks.some(task => task.opportunity_id === selected.id) ? <ul className="divide-y">{initialTasks.filter(task => task.opportunity_id === selected.id).map(task => <li key={task.id} className="flex flex-wrap justify-between gap-3 py-3"><Link className="underline underline-offset-4" href={`/tasks?task=${task.id}#task-${task.id}`}>{task.title}</Link><span className="text-sm text-muted-foreground">{task.completed_at ? "Completed" : task.due_date ? displayDate(task.due_date) : "No due date"}</span></li>)}</ul> : <p className="text-sm text-muted-foreground">No tasks linked to this opportunity yet.</p>}
+        </section>
         <section className="mt-8 border-t pt-6" aria-label="Delete opportunity">
-          {confirming ? <div className="space-y-3"><h2 className="font-semibold">Delete {selected.organization_name}?</h2><p className="text-sm text-muted-foreground">This permanently deletes this opportunity, its saved details, and its activity history.</p><div className="flex flex-wrap gap-3">
+          {confirming ? <div className="space-y-3"><h2 className="font-semibold">Delete {selected.organization_name}?</h2><p className="text-sm text-muted-foreground">This permanently deletes this opportunity, its saved details, and its activity history. Linked tasks will be kept as standalone tasks.</p><div className="flex flex-wrap gap-3">
             <button className="tracker-button tracker-danger" disabled={pending} onClick={() => startTransition(async () => {
               try {
                 const result = await deleteOpportunity(selected.id);

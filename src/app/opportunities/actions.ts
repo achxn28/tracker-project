@@ -5,6 +5,10 @@ import { parseOpportunity, type Opportunity } from "@/lib/opportunity-model";
 import { withOpportunities } from "@/lib/opportunities";
 import { parseActivity, type Activity } from "@/lib/activity-model";
 
+function refreshWorkspace() {
+  revalidatePath("/opportunities"); revalidatePath("/tasks"); revalidatePath("/");
+}
+
 export async function getActivities(id: string): Promise<{ activities?: Activity[]; message?: string }> {
   try {
     return withOpportunities(store => store.get(id) ? { activities: store.activities(id) } : { message: "This opportunity no longer exists." });
@@ -24,7 +28,7 @@ export async function logActivity(id: string, form: FormData): Promise<{ saved?:
     saved = response.saved;
     activities = response.activities;
   } catch { return { message: "The activity could not be saved. Check that the opportunity still exists and is open if scheduling a follow-up." }; }
-  revalidatePath("/opportunities");
+  refreshWorkspace();
   return { saved, activities };
 }
 
@@ -39,13 +43,13 @@ export async function saveOpportunity(id: string | null, form: FormData): Promis
       return store.get(savedId)!;
     });
   } catch { return { message: "The opportunity could not be saved. Your entries are still here; please try again." }; }
-  revalidatePath("/opportunities");
+  refreshWorkspace();
   return { saved };
 }
 
 export async function deleteOpportunity(id: string): Promise<{ message?: string }> {
   try { withOpportunities(store => store.delete(id)); }
   catch { return { message: "The opportunity could not be deleted. Please try again." }; }
-  revalidatePath("/opportunities");
+  refreshWorkspace();
   return {};
 }
