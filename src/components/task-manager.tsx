@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { Plus } from "lucide-react";
 import { TrackerHeader } from "@/components/tracker-header";
 import { deleteTask, saveTask, setTaskCompleted } from "@/app/tasks/actions";
 import { displayDate, priorities, type Opportunity } from "@/lib/opportunity-model";
@@ -38,8 +37,8 @@ export function TaskManager({ initialTasks, opportunities, today, initialOpportu
       {key === "opportunity_id" ? <select {...props}><option value="">Standalone task</option>{opportunities.map(item => <option value={item.id} key={item.id}>{item.organization_name} — {item.title}</option>)}</select> : options.choices ? <select {...props}>{options.choices.map(value => <option value={value} key={value}>{value.charAt(0).toUpperCase() + value.slice(1)}</option>)}</select> : options.multiline ? <textarea {...props} rows={3} /> : <input {...props} type={options.date ? "date" : "text"} />}
       {errors[key] && <p role="alert" className="mt-2 text-sm text-destructive" id={`task-${key}-error`}>{errors[key]}</p>}</div>;
   }
-  return <div className="min-h-svh bg-muted/25"><TrackerHeader active="tasks" /><main className="mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-10">
-    <div className="mb-7 flex flex-wrap items-start justify-between gap-4"><div><h1 className="text-3xl font-semibold tracking-tight">Tasks</h1><p className="mt-2 text-muted-foreground">Turn your recruiting plans into manageable next steps.</p></div>{!editing && <button className="tracker-button tracker-primary" disabled={pending} onClick={() => edit(null)}><Plus className="size-4" aria-hidden="true" />Add task</button>}</div>
+  return <div className="min-h-svh"><TrackerHeader active="tasks" /><main className="mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-10">
+    <div className="mb-7 flex flex-wrap items-start justify-between gap-4"><div><h1 className="text-3xl font-semibold tracking-tight">Tasks</h1><p className="mt-2 text-muted-foreground">Turn your recruiting plans into manageable next steps.</p></div>{!editing && <button className="tracker-button tracker-primary" disabled={pending} onClick={() => edit(null)}>Add task</button>}</div>
     {message && <p role="alert" className="mb-5 text-sm text-destructive">{message}</p>}
     {editing && <form className="tracker-panel mb-7 space-y-5 p-6" onSubmit={event => {
       event.preventDefault(); const form = new FormData(event.currentTarget);

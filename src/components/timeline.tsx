@@ -34,7 +34,7 @@ export function Timeline({ tasks, goals, today }: { tasks: Task[]; goals: GoalVi
     }
   }
   const todayOffset = calendarDistance(window.start, today);
-  return <div className="min-h-svh bg-muted/25"><TrackerHeader active="timeline" /><main className="mx-auto max-w-6xl space-y-6 px-5 py-8 sm:px-8 sm:py-10">
+  return <div className="min-h-svh"><TrackerHeader active="timeline" /><main className="mx-auto max-w-6xl space-y-6 px-5 py-8 sm:px-8 sm:py-10">
     <div><h1 className="text-3xl font-semibold tracking-tight">Timeline</h1><p className="mt-2 text-muted-foreground">See daily tasks and longer goals on the same date axis.</p></div>
     <div className="flex flex-wrap items-end justify-between gap-4"><div className="flex flex-wrap gap-2" role="group" aria-label="Timeline scale">{(["days", "weeks", "months"] as const).map(value => <button className={`tracker-button ${scale === value ? "tracker-primary" : ""}`} key={value} aria-pressed={scale === value} onClick={() => setScale(value)}>{value.charAt(0).toUpperCase() + value.slice(1)}</button>)}</div>
       <div className="flex flex-wrap items-end gap-2"><label className="text-sm font-medium" htmlFor="timeline-date">Starting date<input id="timeline-date" className="tracker-input mt-2" type="date" value={anchor} onChange={event => { if (validCalendarDate(event.target.value)) setAnchor(event.target.value); }} /></label><button className="tracker-button" onClick={() => setAnchor(shiftTimeline(anchor, scale, -1))}>Previous</button><button className="tracker-button" onClick={() => setAnchor(today)}>Today</button><button className="tracker-button" onClick={() => setAnchor(shiftTimeline(anchor, scale, 1))}>Next</button></div>

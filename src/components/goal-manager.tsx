@@ -23,7 +23,7 @@ export function GoalManager({ initialGoals, today, focus }: { initialGoals: Goal
   const visible = goals.filter(goal => !filter || status(goal).toLowerCase() === filter).sort((a, b) => a.end_date.localeCompare(b.end_date));
   function edit(goal: GoalView | null) { setDraft(goal ?? { ...templates[0], title: "" }); setEditId(goal?.id ?? null); setEditing(true); setErrors({}); setMessage(""); }
   const error = (key: string) => errors[key] ? <p className="mt-2 text-sm text-destructive" id={`goal-${key}-error`}>{errors[key]}</p> : null;
-  return <div className="min-h-svh bg-muted/25"><TrackerHeader active="goals" /><main className="mx-auto max-w-6xl space-y-6 px-5 py-8 sm:px-8 sm:py-10">
+  return <div className="min-h-svh"><TrackerHeader active="goals" /><main className="mx-auto max-w-6xl space-y-6 px-5 py-8 sm:px-8 sm:py-10">
     <div className="flex flex-wrap justify-between gap-4"><div><h1 className="text-3xl font-semibold tracking-tight">Goals</h1><p className="mt-2 text-muted-foreground">Measure progress from what you have actually recorded.</p></div>{!editing && <button className="tracker-button tracker-primary" onClick={() => edit(null)}>Add goal</button>}</div>
     {message && <p role="alert" className="text-sm text-destructive">{message}</p>}
     {editing && <form className="tracker-panel space-y-5 p-6" onSubmit={event => {
