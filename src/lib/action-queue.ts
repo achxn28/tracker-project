@@ -22,7 +22,7 @@ export function buildActionQueue(opportunities: Opportunity[], tasks: Task[], ac
     items.push({ id: task.id, kind: "task", title: task.title, context: task.opportunity_id ? names.get(task.opportunity_id) ?? task.category : task.category, date: task.due_date, section: sectionFor(task.due_date), href: `/tasks?task=${encodeURIComponent(task.id)}#task-${task.id}`, opportunity_id: task.opportunity_id, priority: task.priority });
   }
   for (const opportunity of opportunities) {
-    if (opportunity.status === "Closed") continue;
+    if (opportunity.status === "Closed" || opportunity.archived_at) continue;
     const href = `/opportunities?opportunity=${encodeURIComponent(opportunity.id)}`;
     const history = activities.filter(activity => activity.opportunity_id === opportunity.id);
     const duplicate = openTasks.some(task => task.opportunity_id === opportunity.id && task.due_date === opportunity.next_action_date && sameActionTitle(task.title, opportunity.next_action ?? ""));

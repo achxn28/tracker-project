@@ -14,7 +14,7 @@ export type OpportunityInput = Record<OptionalField, string | null> & {
   work_arrangement: typeof arrangements[number];
   closed_outcome: typeof outcomes[number] | null;
 };
-export type Opportunity = OpportunityInput & { id: string; created_at: string; updated_at: string };
+export type Opportunity = OpportunityInput & { id: string; created_at: string; updated_at: string; archived_at: string | null };
 export type FormState = { errors?: Record<string, string>; message?: string };
 
 export function statusLabel(status: string, type: string) {

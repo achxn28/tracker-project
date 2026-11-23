@@ -27,6 +27,7 @@ export function openOpportunityStore(filename: string) {
       work_arrangement TEXT NOT NULL CHECK (work_arrangement IN (${sqlOptions(arrangements)})),
       ${optionalFields.map(field => `${field} TEXT`).join(",\n")},
       closed_outcome TEXT CHECK (closed_outcome IN (${sqlOptions(outcomes)})),
+      archived_at TEXT,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL,
       CHECK (closed_outcome IS NULL OR status = 'Closed')
@@ -69,6 +70,13 @@ export function openOpportunityStore(filename: string) {
       CHECK (start_date <= end_date)
     ) STRICT;
   `);
+  if (!db.prepare("PRAGMA table_info(opportunities)").all().some(column => column.name === "archived_at")) {
+    db.exec("BEGIN IMMEDIATE");
+    try {
+      if (!db.prepare("PRAGMA table_info(opportunities)").all().some(column => column.name === "archived_at")) db.exec("ALTER TABLE opportunities ADD COLUMN archived_at TEXT");
+      db.exec("COMMIT");
+    } catch (error) { db.exec("ROLLBACK"); db.close(); throw error; }
+  }
   const activitySchema = db.prepare("SELECT sql FROM sqlite_master WHERE name = 'activities'").get()?.sql as string;
   if (!activitySchema.includes("'Offer accepted'")) {
     db.exec("BEGIN IMMEDIATE");
@@ -109,6 +117,10 @@ export function openOpportunityStore(filename: string) {
         .run(...columns.map(key => data[key]), new Date().toISOString(), id).changes > 0;
     },
     delete: (id: string) => db.prepare("DELETE FROM opportunities WHERE id = ?").run(id).changes > 0,
+    archive(id: string, archived: boolean) {
+      const now = new Date().toISOString();
+      return db.prepare("UPDATE opportunities SET archived_at = CASE WHEN ? THEN COALESCE(archived_at, ?) ELSE NULL END, updated_at = ? WHERE id = ?").run(archived ? 1 : 0, now, now, id).changes > 0;
+    },
     goals: () => db.prepare("SELECT * FROM goals ORDER BY end_date, created_at").all().map(row => ({ ...row })) as Goal[],
     getGoal(id: string) {
       const row = db.prepare("SELECT * FROM goals WHERE id = ?").get(id);

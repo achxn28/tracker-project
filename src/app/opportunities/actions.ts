@@ -9,6 +9,14 @@ function refreshWorkspace() {
   revalidatePath("/opportunities"); revalidatePath("/tasks"); revalidatePath("/"); revalidatePath("/goals"); revalidatePath("/timeline");
 }
 
+export async function archiveOpportunity(id: string, archived: boolean): Promise<{ saved?: Opportunity; message?: string }> {
+  if (typeof archived !== "boolean") return { message: "Choose a valid archive state." };
+  try {
+    const saved = withOpportunities(store => { if (!store.archive(id, archived)) throw new Error("missing"); return store.get(id)!; });
+    refreshWorkspace(); return { saved };
+  } catch { return { message: "The opportunity could not be archived or restored. Please try again." }; }
+}
+
 export async function getActivities(id: string): Promise<{ activities?: Activity[]; message?: string }> {
   try {
     return withOpportunities(store => store.get(id) ? { activities: store.activities(id) } : { message: "This opportunity no longer exists." });
