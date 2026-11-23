@@ -2,6 +2,16 @@
 
 Product Requirements Specification — Version 1.1
 
+### Current implementation direction — November 22, 2026
+
+The application is now intended for use only on the owner's computer. Use a local
+SQLite database, bind the app server to `127.0.0.1`, and omit authentication.
+This decision supersedes the Supabase, user-account/RLS, and Vercel hosting
+requirements below for the local version. User ownership columns are unnecessary
+in the local database. Keep the remaining product workflows and timeline scope.
+The current implementation milestone is opportunity creation, listing, viewing,
+editing, and deletion; the other workflows remain future work.
+
 ## 1. Product Overview
 
 Build a personal web application to manage the process of securing a software engineering internship or computer science research opportunity for summer 2027.
