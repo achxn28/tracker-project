@@ -10,7 +10,8 @@ This decision supersedes the Supabase, user-account/RLS, and Vercel hosting
 requirements below for the local version. User ownership columns are unnecessary
 in the local database. Keep the remaining product workflows and timeline scope.
 Implemented milestones cover opportunity creation, listing, viewing, editing,
-deletion, and manual activity logging; the other workflows remain future work.
+deletion, manual activity logging, task management, and the dashboard action queue.
+Goals and the timeline remain future work.
 
 ## 1. Product Overview
 
@@ -92,6 +93,19 @@ Display prioritized actions:
 5. Opportunities marked ready for outreach
 
 Each item should link directly to its associated opportunity or task.
+
+For the local MVP, upcoming tasks, next actions, and application deadlines cover
+today through seven calendar days ahead in America/New_York. Overdue pending tasks
+and next actions are also shown. Completed tasks and closed opportunity actions
+are excluded. Application deadlines are actionable only in pre-contact/application
+stages and when no Application submitted activity has been recorded. Matching
+linked tasks and next actions (same title and date) appear once. Ready-for-outreach
+items are omitted when the opportunity already has queued work.
+
+Clearing a next action removes its planning fields; it does not log outreach.
+The local dashboard initially displays the three supported distinct outreach and
+application totals, plus recent logged activities and task completions. Other goal
+and response metrics remain future work.
 
 ### Goal Progress
 
@@ -218,8 +232,11 @@ not regress later stages, reopen closed opportunities, or overwrite newer
 pipeline information with backdated events.
 
 Saving a suggested or adjusted follow-up date requires explicit selection and
-sets the opportunity's Next action to Send follow-up email. Otherwise preserve the
-existing next action. Closed opportunities must be reopened manually before a
+sets the opportunity's Next action to Send follow-up email. Otherwise preserve
+custom next actions. Sending a follow-up or logging a reply, meeting/interview,
+offer, or rejection resolves an existing generated email reminder unless the event
+predates the latest logged email. An explicitly selected replacement date takes
+precedence. Closed opportunities must be reopened manually before a
 follow-up can be scheduled. Deleting an opportunity deletes its linked activity
 history, and the confirmation must explain this. Recruiting outreach counts use
 distinct opportunities with initial emails; follow-ups alone do not count.
@@ -305,6 +322,12 @@ Features:
 - Link opportunity-specific tasks back to the relevant opportunity.
 
 Include one-time milestones, such as completing a technical resume or deploying a portfolio project, as ordinary tasks with deadlines.
+
+Completing a linked task clears a next action only when both its title and due
+date match. Repeated completion requests preserve the original completion time.
+Reopening a task removes its completion time without restoring old next actions.
+Deleting an opportunity preserves linked tasks as standalone tasks. Task deletion
+requires confirmation.
 
 ## 9. Unified Timeline
 

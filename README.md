@@ -1,7 +1,7 @@
 # Summer 2027 Opportunity Tracker
 
 A local personal research outreach and internship tracker with opportunity creation,
-viewing, editing, deletion, and manual activity logging.
+viewing, editing, deletion, manual activity logging, tasks, and an action queue.
 Product requirements are documented in [specs.md](specs.md).
 
 ## Stack
@@ -21,8 +21,9 @@ npm install
 npm run dev
 ```
 
-Open [localhost:3000](http://localhost:3000). The homepage opens the opportunity
-list. Both development and production servers bind to `127.0.0.1` for local use.
+Open [localhost:3000](http://localhost:3000). The homepage opens the dashboard.
+Use the navigation to switch between Dashboard, Opportunities, and Tasks.
+Both development and production servers bind to `127.0.0.1` for local use.
 There is no sign-in or cloud database.
 
 ## Local data
@@ -66,8 +67,32 @@ pipeline information.
 
 For emails, an optional follow-up date is suggested seven calendar days later.
 Checking **Set a follow-up date** saves it as the opportunity's Next action.
-Existing next actions are preserved unless you explicitly choose to replace them.
+Existing custom next actions are preserved unless you explicitly choose to replace them.
 Repeated emails and follow-ups do not inflate distinct initial outreach counts.
-Deleting an opportunity also deletes its activity history after confirmation.
+Sending a follow-up or recording a reply, meeting, offer, or rejection resolves
+the prior generated email reminder, unless a replacement date is selected.
+Backdated events do not clear a reminder belonging to a newer logged email.
+Custom next actions are preserved. Deleting an opportunity also deletes its
+activity history after confirmation; linked tasks are kept as standalone tasks.
 
-Tasks, goals, the action queue, and the timeline are later milestones.
+## Tasks and action queue
+
+Tasks can be standalone or linked to opportunities. Add a title, category, priority,
+optional description, and optional start/due dates. Edit, complete, reopen, or delete
+tasks from the Tasks page. Filter by category, priority, completion, or opportunity;
+dated tasks sort first, with overdue pending tasks called out. Linked tasks also
+appear on opportunity details.
+
+The dashboard prioritizes overdue tasks and next actions, approaching application
+deadlines, work due today, the upcoming week, and opportunities ready for outreach.
+Dates use America/New_York. The seven-day deadline window is inclusive. Submitted
+applications and closed opportunities do not generate application reminders.
+Completed tasks and undated work do not appear as due work in the queue.
+
+A linked task matching an opportunity's next-action title and date appears once.
+Completing that task clears the matching next action. Clearing an action from the
+dashboard removes its plan without recording an email or increasing outreach
+counts. Three outreach totals use distinct recorded opportunities; recent activity
+includes logged events and task completions.
+
+Goals and the timeline are later milestones.
