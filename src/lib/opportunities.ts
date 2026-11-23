@@ -5,6 +5,7 @@ import { dirname, join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { arrangements, opportunityTypes, optionalFields, outcomes, priorities, statuses, type Opportunity, type OpportunityInput } from "./opportunity-model.ts";
 import { activityTypes, pipelineAfterActivity, type Activity, type ActivityInput } from "./activity-model.ts";
+import { taskCategories, type Task, type TaskInput } from "./task-model.ts";
 
 const columns = ["organization_name", "title", "type", "status", "priority", "work_arrangement", ...optionalFields, "closed_outcome"] as const;
 const sqlOptions = (values: readonly string[]) => values.map(value => `'${value}'`).join(", ");
@@ -38,6 +39,21 @@ export function openOpportunityStore(filename: string) {
       created_at TEXT NOT NULL
     ) STRICT;
     CREATE INDEX IF NOT EXISTS activities_opportunity_time ON activities(opportunity_id, occurred_at DESC);
+    CREATE TABLE IF NOT EXISTS tasks (
+      id TEXT PRIMARY KEY NOT NULL,
+      opportunity_id TEXT REFERENCES opportunities(id) ON DELETE SET NULL,
+      title TEXT NOT NULL CHECK (length(trim(title)) > 0),
+      description TEXT,
+      category TEXT NOT NULL CHECK (category IN (${sqlOptions(taskCategories)})),
+      priority TEXT NOT NULL CHECK (priority IN (${sqlOptions(priorities)})),
+      start_date TEXT,
+      due_date TEXT,
+      completed_at TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      CHECK (start_date IS NULL OR due_date IS NULL OR start_date <= due_date)
+    ) STRICT;
+    CREATE INDEX IF NOT EXISTS tasks_due_date ON tasks(due_date);
   `);
   return {
     list: () => db.prepare("SELECT * FROM opportunities ORDER BY created_at DESC, id DESC").all().map(row => ({ ...row })) as Opportunity[],
@@ -57,6 +73,42 @@ export function openOpportunityStore(filename: string) {
         .run(...columns.map(key => data[key]), new Date().toISOString(), id).changes > 0;
     },
     delete: (id: string) => db.prepare("DELETE FROM opportunities WHERE id = ?").run(id).changes > 0,
+    tasks: () => db.prepare("SELECT * FROM tasks ORDER BY due_date IS NULL, due_date, created_at DESC").all().map(row => ({ ...row })) as Task[],
+    getTask(id: string) {
+      const row = db.prepare("SELECT * FROM tasks WHERE id = ?").get(id);
+      return row ? { ...row } as Task : undefined;
+    },
+    createTask(data: TaskInput) {
+      const id = randomUUID();
+      const now = new Date().toISOString();
+      db.prepare("INSERT INTO tasks (id, title, description, category, priority, opportunity_id, start_date, due_date, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+        .run(id, data.title, data.description, data.category, data.priority, data.opportunity_id, data.start_date, data.due_date, now, now);
+      return id;
+    },
+    updateTask(id: string, data: TaskInput) {
+      return db.prepare("UPDATE tasks SET title = ?, description = ?, category = ?, priority = ?, opportunity_id = ?, start_date = ?, due_date = ?, updated_at = ? WHERE id = ?")
+        .run(data.title, data.description, data.category, data.priority, data.opportunity_id, data.start_date, data.due_date, new Date().toISOString(), id).changes > 0;
+    },
+    completeTask(id: string, completed: boolean) {
+      db.exec("BEGIN IMMEDIATE");
+      try {
+        const task = db.prepare("SELECT * FROM tasks WHERE id = ?").get(id) as Task | undefined;
+        if (!task) throw new Error("Task not found");
+        const now = new Date().toISOString();
+        db.prepare("UPDATE tasks SET completed_at = ?, updated_at = ? WHERE id = ?").run(completed ? task.completed_at ?? now : null, now, id);
+        if (completed && !task.completed_at && task.opportunity_id && task.due_date) {
+          db.prepare("UPDATE opportunities SET next_action = NULL, next_action_date = NULL, updated_at = ? WHERE id = ? AND lower(trim(next_action)) = lower(trim(?)) AND next_action_date = ?")
+            .run(now, task.opportunity_id, task.title, task.due_date);
+        }
+        db.exec("COMMIT");
+      } catch (error) { db.exec("ROLLBACK"); throw error; }
+    },
+    deleteTask: (id: string) => db.prepare("DELETE FROM tasks WHERE id = ?").run(id).changes > 0,
+    clearNextAction(id: string, title: string, date: string) {
+      return db.prepare("UPDATE opportunities SET next_action = NULL, next_action_date = NULL, updated_at = ? WHERE id = ? AND next_action = ? AND next_action_date = ?")
+        .run(new Date().toISOString(), id, title, date).changes > 0;
+    },
+    allActivities: () => db.prepare("SELECT * FROM activities ORDER BY occurred_at DESC, created_at DESC, id DESC").all().map(row => ({ ...row })) as Activity[],
     activities: (id: string) => db.prepare("SELECT * FROM activities WHERE opportunity_id = ? ORDER BY occurred_at DESC, created_at DESC, id DESC").all(id).map(row => ({ ...row })) as Activity[],
     logActivity(id: string, data: ActivityInput) {
       db.exec("BEGIN IMMEDIATE");
@@ -69,11 +121,14 @@ export function openOpportunityStore(filename: string) {
           : { status: opportunity.status, closed_outcome: opportunity.closed_outcome };
         const timestamp = new Date().toISOString();
         const activityId = randomUUID();
+        const lastEmail = db.prepare("SELECT MAX(occurred_at) AS time FROM activities WHERE opportunity_id = ? AND activity_type IN ('Initial email sent', 'Follow-up email sent')").get(id)?.time as string | null;
+        const resolvesFollowUp = opportunity.next_action === "Send follow-up email" &&
+          ["Follow-up email sent", "Reply received", "Meeting scheduled", "Meeting completed", "Interview completed", "Offer received", "Rejection received"].includes(data.activity_type) && (!lastEmail || data.occurred_at >= lastEmail);
         db.prepare("INSERT INTO activities (id, opportunity_id, activity_type, occurred_at, notes, created_at) VALUES (?, ?, ?, ?, ?, ?)")
           .run(activityId, id, data.activity_type, data.occurred_at, data.notes, timestamp);
         db.prepare("UPDATE opportunities SET status = ?, closed_outcome = ?, next_action = ?, next_action_date = ?, updated_at = ? WHERE id = ?")
-          .run(stage.status, stage.closed_outcome, data.follow_up_date ? "Send follow-up email" : opportunity.next_action,
-            data.follow_up_date ?? opportunity.next_action_date, timestamp, id);
+          .run(stage.status, stage.closed_outcome, data.follow_up_date ? "Send follow-up email" : resolvesFollowUp ? null : opportunity.next_action,
+            data.follow_up_date ?? (resolvesFollowUp ? null : opportunity.next_action_date), timestamp, id);
         db.exec("COMMIT");
         return activityId;
       } catch (error) { db.exec("ROLLBACK"); throw error; }
