@@ -95,4 +95,20 @@ dashboard removes its plan without recording an email or increasing outreach
 counts. Three outreach totals use distinct recorded opportunities; recent activity
 includes logged events and task completions.
 
-Goals and the timeline are later milestones.
+## Goals
+
+Create a custom goal or start from an editable research, startup, application,
+accepted-offer, or weekly template. Weekly templates use Monday through Sunday.
+Targets and dates remain configurable; templates are saved only when you submit.
+Pause a goal through its editor. Completion and progress are derived, not entered.
+
+Each opportunity counts once per milestone, using its earliest qualifying event.
+A repeated initial email in a later week is not a new contact. Goal periods include
+both dates in New York time and exclude events that have not occurred yet.
+Positive replies must be explicitly marked when logging a reply. Received offers
+and accepted offers are separate activity types. Meetings/interviews and positive
+replies count distinct opportunities; task progress counts completed task records.
+Reopening or deleting a task changes derived progress. Deleting a goal preserves
+its activities and tasks.
+
+The timeline is a later milestone.

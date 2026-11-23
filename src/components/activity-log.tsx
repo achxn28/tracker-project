@@ -14,6 +14,7 @@ export function ActivityLog({ opportunity, onUpdated }: { opportunity: Opportuni
   const [type, setType] = useState<ActivityType>(opportunity.type === "Formal Internship" ? "Application submitted" : "Initial email sent");
   const [when, setWhen] = useState(() => newYorkInput());
   const [notes, setNotes] = useState("");
+  const [positive, setPositive] = useState(false);
   const [schedule, setSchedule] = useState(false);
   const [customDate, setCustomDate] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -51,7 +52,7 @@ export function ActivityLog({ opportunity, onUpdated }: { opportunity: Opportuni
           const result = await logActivity(id, form);
           if (!result.saved || !result.activities) { setErrors(result.errors ?? {}); setMessage(result.message ?? "Couldn’t save this activity."); return; }
           setActivities(result.activities); onUpdated(result.saved);
-          setAdding(false); setNotes(""); setMessage(""); setErrors({}); setLoadError("");
+          setAdding(false); setNotes(""); setPositive(false); setMessage(""); setErrors({}); setLoadError("");
           setSuccess(schedule ? "Activity logged and follow-up saved in Next action." : "Activity logged.");
         } catch { setMessage("Couldn’t reach the app. Your entries are still here; please try again."); }
       });
@@ -59,7 +60,7 @@ export function ActivityLog({ opportunity, onUpdated }: { opportunity: Opportuni
       <fieldset className="grid gap-5 sm:grid-cols-2" disabled={pending}>
         <legend className="sr-only">Log activity</legend>
         <div><label className="mb-2 block text-sm font-medium" htmlFor="activity-type">Activity type</label>
-          <select id="activity-type" name="activity_type" className="tracker-input" value={type} onChange={event => { setType(event.target.value as ActivityType); setSchedule(false); }} aria-invalid={Boolean(errors.activity_type)} aria-describedby={errors.activity_type ? "activity-activity_type-error" : undefined}>
+          <select id="activity-type" name="activity_type" className="tracker-input" value={type} onChange={event => { setType(event.target.value as ActivityType); setSchedule(false); setPositive(false); }} aria-invalid={Boolean(errors.activity_type)} aria-describedby={errors.activity_type ? "activity-activity_type-error" : undefined}>
             {activityTypes.map(value => <option key={value}>{value}</option>)}
           </select>{error("activity_type")}
         </div>
@@ -68,6 +69,7 @@ export function ActivityLog({ opportunity, onUpdated }: { opportunity: Opportuni
           <p className="mt-2 text-sm text-muted-foreground" id="activity-timezone">America/New_York</p>{error("occurred_at")}
         </div>
         <div className="sm:col-span-2"><label className="mb-2 block text-sm font-medium" htmlFor="activity-notes">Summary / notes (optional)</label><textarea id="activity-notes" name="notes" className="tracker-input" rows={3} value={notes} onChange={event => setNotes(event.target.value)} /></div>
+        {type === "Reply received" && <div className="sm:col-span-2"><label className="flex min-h-11 items-center gap-3 text-sm font-medium"><input name="positive_response" type="checkbox" className="size-4" checked={positive} onChange={event => setPositive(event.target.checked)} />This is a positive response</label>{error("positive_response")}</div>}
         {isOutreach(type) && opportunity.status !== "Closed" && <div className="space-y-3 sm:col-span-2">
           <label className="flex min-h-11 items-center gap-3 text-sm font-medium"><input name="schedule_follow_up" type="checkbox" checked={schedule} onChange={event => setSchedule(event.target.checked)} className="size-4" />Set a follow-up date</label>
           <p className="text-sm text-muted-foreground">Suggested seven days after this email. Accept it or choose another date.{opportunity.next_action || opportunity.next_action_date ? " This will replace the current Next action and its date." : ""}</p>
@@ -79,7 +81,7 @@ export function ActivityLog({ opportunity, onUpdated }: { opportunity: Opportuni
       <div className="flex flex-wrap gap-3"><button type="submit" className="tracker-button tracker-primary" disabled={pending}>{pending ? "Saving…" : "Save activity"}</button><button type="button" className="tracker-button" disabled={pending} onClick={() => setAdding(false)}>Cancel activity</button></div>
     </form>}
     {loading ? <p role="status" className="text-sm text-muted-foreground">Loading activity history…</p> : loadError ? <div><p role="alert" className="text-sm text-destructive">{loadError}</p><button className="tracker-button mt-3" onClick={() => { setLoading(true); setRetry(value => value + 1); }}>Retry history</button></div> : activities.length ? <ol className="divide-y">
-      {activities.map(activity => <li key={activity.id} className="space-y-2 py-4 first:pt-0 last:pb-0"><div className="flex flex-wrap items-baseline justify-between gap-2"><h3 className="font-medium">{activity.activity_type}</h3><time className="text-sm text-muted-foreground" dateTime={activity.occurred_at}>{displayActivityTime(activity.occurred_at)}</time></div>{activity.notes && <p className="whitespace-pre-wrap break-words text-sm">{activity.notes}</p>}</li>)}
+      {activities.map(activity => <li key={activity.id} className="space-y-2 py-4 first:pt-0 last:pb-0"><div className="flex flex-wrap items-baseline justify-between gap-2"><h3 className="font-medium">{activity.activity_type}{activity.positive_response === 1 && <span className="tracker-badge ml-2">Positive</span>}</h3><time className="text-sm text-muted-foreground" dateTime={activity.occurred_at}>{displayActivityTime(activity.occurred_at)}</time></div>{activity.notes && <p className="whitespace-pre-wrap break-words text-sm">{activity.notes}</p>}</li>)}
     </ol> : <p className="text-sm text-muted-foreground">No activity yet. Log your first email, application, or note.</p>}
   </section>;
 }

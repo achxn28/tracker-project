@@ -5,7 +5,7 @@ import { parseTask, type Task } from "@/lib/task-model";
 import { withOpportunities } from "@/lib/opportunities";
 
 function refreshWorkspace() {
-  revalidatePath("/"); revalidatePath("/tasks"); revalidatePath("/opportunities");
+  revalidatePath("/"); revalidatePath("/tasks"); revalidatePath("/opportunities"); revalidatePath("/goals"); revalidatePath("/timeline");
 }
 
 export async function saveTask(id: string | null, form: FormData): Promise<{ saved?: Task; errors?: Record<string, string>; message?: string }> {

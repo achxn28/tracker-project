@@ -6,7 +6,7 @@ import { withOpportunities } from "@/lib/opportunities";
 import { parseActivity, type Activity } from "@/lib/activity-model";
 
 function refreshWorkspace() {
-  revalidatePath("/opportunities"); revalidatePath("/tasks"); revalidatePath("/");
+  revalidatePath("/opportunities"); revalidatePath("/tasks"); revalidatePath("/"); revalidatePath("/goals"); revalidatePath("/timeline");
 }
 
 export async function getActivities(id: string): Promise<{ activities?: Activity[]; message?: string }> {

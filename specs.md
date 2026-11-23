@@ -11,7 +11,7 @@ requirements below for the local version. User ownership columns are unnecessary
 in the local database. Keep the remaining product workflows and timeline scope.
 Implemented milestones cover opportunity creation, listing, viewing, editing,
 deletion, manual activity logging, task management, and the dashboard action queue.
-Goals and the timeline remain future work.
+Measurable goals are also implemented; the timeline remains future work.
 
 ## 1. Product Overview
 
@@ -200,6 +200,7 @@ Supported activity types:
 - Meeting completed
 - Interview completed
 - Offer received
+- Offer accepted
 - Rejection received
 - General note
 
@@ -209,6 +210,7 @@ Each activity stores:
 - Activity type
 - Date/time
 - Optional summary or notes
+- Whether a reply was positive (explicitly selected, never inferred)
 
 Logging an initial email should update the opportunity's stage to Contacted if appropriate.
 
@@ -264,8 +266,19 @@ A goal contains:
 - Meetings or interviews completed
 - Offers received
 - Tasks completed
+- Offers accepted
 
 Progress should be derived from the activity log or completed tasks, avoiding duplicate counting.
+
+In the local version, opportunity metrics count each opportunity once at its
+earliest qualifying recorded milestone across all history. A repeated initial
+email in a later week does not count as a new contact. Positive replies require an
+explicit positive marker. Completed meetings/interviews, replies, and offers count
+distinct opportunities. Received and accepted offers are separate milestones.
+Task progress counts completed tasks, so reopening or deleting one changes progress.
+Date ranges include both dates in New York time; future events do not count yet.
+Weekly templates use Monday through Sunday. Goals persist Active or Paused state,
+while completion is calculated from progress and target rather than manually set.
 
 Goal start dates and deadlines define timeline block lengths; elapsed time must not increase measured goal progress.
 
