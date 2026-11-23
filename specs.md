@@ -11,7 +11,7 @@ requirements below for the local version. User ownership columns are unnecessary
 in the local database. Keep the remaining product workflows and timeline scope.
 Implemented milestones cover opportunity creation, listing, viewing, editing,
 deletion, manual activity logging, task management, and the dashboard action queue.
-Measurable goals are also implemented; the timeline remains future work.
+Measurable goals and the shared task/goal timeline are also implemented.
 
 ## 1. Product Overview
 

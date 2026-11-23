@@ -111,4 +111,11 @@ replies count distinct opportunities; task progress counts completed task record
 Reopening or deleting a task changes derived progress. Deleting a goal preserves
 its activities and tasks.
 
-The timeline is a later milestone.
+## Timeline
+
+The Timeline page combines tasks and goals on one date axis. Switch between daily,
+weekly, and monthly scales, choose a starting date, or pan to earlier/later work.
+Blocks use saved start/end dates; due-date-only tasks use diamond markers. Tasks
+without due dates stay in a separate list without invented schedule ranges.
+Goal fill shows measured progress, never elapsed time. Select a row or block to
+open the task or goal. Clipped blocks continue outside the selected date range.
