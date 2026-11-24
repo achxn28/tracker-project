@@ -176,3 +176,16 @@ colors: green for more than seven days remaining, yellow for four to seven days,
 amber for one to three days, and red for today or overdue. Text labels retain the
 actual dates and remaining time. Completed and undated tasks are neutral. Date
 colors use the New York calendar date when the page loads or refreshes.
+
+## Novus client CRMs
+
+The Novus Clients page connects the four supplied partner Google Sheets through
+Google OAuth. Select a partner, load current records, filter the current page,
+and explicitly save changed fields back to its original `Business record` tab.
+Sheet records are not copied into SQLite. Formula/protected cells remain
+read-only, and a fresh row check rejects stale edits.
+
+Complete [Google Sheets setup](docs/google-sheets-setup.md) to enable the app's
+own Google authorization. Until configured, the page displays setup guidance and
+links to the four original sheets. Automated tests use mocked Google responses;
+live write verification requires your authorized Google account.

@@ -35,7 +35,14 @@ the user, and received and accepted offers are separate activities. Archived
 opportunities retain their recorded history and metric credit. CSV exports cover
 opportunities and activities; full local backups use the stopped SQLite file.
 
-Gmail tracking, AI integrations, scraping, and external APIs remain out of scope.
+Google Sheets integration is explicitly included for the four supplied Novus
+partner CRMs, on a separate Novus Clients page. It requires this local app’s own
+Google OAuth authorization. Reads use the existing Business record tab; explicit
+saves update only changed editable cells. CRM records do not contribute to
+recruiting metrics or copy into the opportunity database.
+
+Gmail tracking, AI integrations, scraping, and unrelated external APIs remain out
+of scope.
 
 ## 1. Product Overview
 
