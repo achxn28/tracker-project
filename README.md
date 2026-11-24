@@ -163,9 +163,13 @@ Restart the server with the same database path to verify persistence.
 
 The workspace uses translucent glass panels in light and dark themes, with
 text-only navigation and actions. The dashboard puts due work first and includes
-a month calendar. Select a day to see pending task and unfinished active goal
-deadlines, or open the full timeline for planned ranges. Undated tasks do not
-receive invented calendar dates.
+a month calendar. Select a day to see pending tasks, unfinished active goals,
+unsubmitted application deadlines, and planned follow-ups or other next actions.
+Open the full timeline for task and goal ranges. Undated tasks do not
+receive invented calendar dates. Archived and closed opportunity reminders are
+excluded. A next action matching a pending linked task appears once, as the task.
+Application deadlines disappear after a submission is logged or the pipeline
+advances past preparation; planned next actions remain until cleared or resolved.
 
 Task cards, dashboard task rows, and timeline task blocks use the same due-date
 colors: green for more than seven days remaining, yellow for four to seven days,

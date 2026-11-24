@@ -25,7 +25,8 @@ measurable goals, the unified daily/week/month timeline, search and combined
 filters, table and status-board views, reversible archiving, CSV exports, theme,
 and a configurable follow-up interval. The desktop layout uses a left sidebar.
 The dashboard also includes a month calendar with a selected-day agenda for
-pending tasks and unfinished active goal deadlines. Use clear glass surfaces,
+pending tasks, unfinished active goal deadlines, unsubmitted application
+deadlines, and planned follow-ups or other opportunity next actions. Use clear glass surfaces,
 text-only navigation, and green/yellow/amber/red task urgency as dates approach.
 Board cards open the editor for status changes; dragging cards is not included.
 

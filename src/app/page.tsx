@@ -62,7 +62,7 @@ export default function Home() {
           <p className="text-xs leading-relaxed text-muted-foreground">America/New_York · Dated work covers today and the next seven days, plus overdue items.</p>
         </section>
 
-        <aside className="min-w-0 space-y-7"><DashboardCalendar today={today} deadlines={calendarDeadlines(data.tasks, activeGoals)} />
+        <aside className="min-w-0 space-y-7"><DashboardCalendar today={today} deadlines={calendarDeadlines(data.tasks, activeGoals, data.opportunities, data.activities)} />
         <section className="min-w-0 space-y-4" aria-labelledby="goals-heading">
           <div className="flex flex-wrap items-center justify-between gap-3"><h2 id="goals-heading" className="text-xl font-semibold tracking-tight">Goal progress</h2><Link className="text-sm text-primary underline-offset-4 hover:underline" href="/goals">Manage goals</Link></div>
           {activeGoals.length ? <div className="tracker-panel divide-y overflow-hidden">{activeGoals.map(goal => <Link key={goal.id} href={`/goals?goal=${goal.id}#goal-${goal.id}`} className="block space-y-3 p-5 transition-colors hover:bg-muted/40">
