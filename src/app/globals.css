@@ -8,8 +8,8 @@
     background: var(--glass);
     border-color: var(--glass-edge);
     box-shadow: var(--glass-shadow);
-    -webkit-backdrop-filter: blur(18px) saturate(135%);
-    backdrop-filter: blur(18px) saturate(135%);
+    -webkit-backdrop-filter: blur(4px) saturate(120%);
+    backdrop-filter: blur(4px) saturate(120%);
   }
   .tracker-button {
     @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border px-4 py-2 text-sm font-medium transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50;
@@ -97,12 +97,12 @@
 
 :root {
     color-scheme: light;
-    --glass: rgb(255 255 255 / 12%);
+    --glass: rgb(255 255 255 / 2%);
     --glass-edge: rgb(255 255 255 / 65%);
-    --glass-highlight: rgb(255 255 255 / 45%);
+    --glass-highlight: rgb(255 255 255 / 8%);
     --glass-shadow: inset 0 1px 0 rgb(255 255 255 / 55%), inset 1px 0 0 rgb(255 255 255 / 20%), 0 8px 28px rgb(40 57 105 / 5%);
-    --control: rgb(255 255 255 / 18%);
-    --control-hover: rgb(255 255 255 / 42%);
+    --control: rgb(255 255 255 / 3%);
+    --control-hover: rgb(255 255 255 / 10%);
     --background: #edf0fa;
     --foreground: #202d49;
     --card: #f0f3fc;
@@ -139,12 +139,12 @@
 
 .dark {
     color-scheme: dark;
-    --glass: rgb(21 30 54 / 20%);
+    --glass: rgb(21 30 54 / 4%);
     --glass-edge: rgb(206 222 255 / 20%);
-    --glass-highlight: rgb(218 231 255 / 8%);
+    --glass-highlight: rgb(218 231 255 / 4%);
     --glass-shadow: inset 0 1px 0 rgb(218 231 255 / 12%), 0 8px 28px rgb(3 8 24 / 12%);
-    --control: rgb(16 25 48 / 20%);
-    --control-hover: rgb(137 165 230 / 15%);
+    --control: rgb(16 25 48 / 5%);
+    --control-hover: rgb(137 165 230 / 8%);
     --background: #111a30;
     --foreground: #ecf1ff;
     --card: #202e4c;
@@ -211,8 +211,8 @@ body {
 .tracker-sidebar {
   background: linear-gradient(150deg, var(--glass-highlight), transparent 70%), var(--glass);
   border-color: var(--glass-edge);
-  -webkit-backdrop-filter: blur(24px) saturate(140%);
-  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(6px) saturate(120%);
+  backdrop-filter: blur(6px) saturate(120%);
   box-shadow: inset -1px 0 0 var(--glass-highlight);
 }
 .tracker-nav-link {
@@ -252,7 +252,7 @@ button:not(:disabled), select { cursor: pointer; }
 .dark .task-urgency-amber { --urgency-ink: #f7bd83; }
 .dark .task-urgency-red { --urgency-ink: #ffb1b4; }
 .task-glass {
-  background-image: linear-gradient(110deg, rgb(var(--urgency-rgb) / 15%), rgb(var(--urgency-rgb) / 3%));
+  background-image: linear-gradient(110deg, rgb(var(--urgency-rgb) / 7%), rgb(var(--urgency-rgb) / 1%));
   border-left: 3px solid rgb(var(--urgency-rgb) / 55%);
 }
 .task-urgency-neutral.task-glass { background-image: none; border-left-color: var(--border); }
@@ -282,14 +282,14 @@ button:not(:disabled), select { cursor: pointer; }
   color: var(--client-ink);
   border-color: rgb(var(--client-rgb) / 25%);
   border-top: 2px solid rgb(var(--client-rgb) / 55%);
-  background: linear-gradient(125deg, rgb(var(--client-rgb) / 9%), transparent 80%), var(--glass);
+  background: linear-gradient(125deg, rgb(var(--client-rgb) / 3%), transparent 80%), var(--glass);
   box-shadow: var(--glass-shadow);
-  -webkit-backdrop-filter: blur(18px);
-  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(4px) saturate(120%);
+  backdrop-filter: blur(4px) saturate(120%);
 }
 .crm-client-tab[aria-pressed="true"] {
   border-color: rgb(var(--client-rgb) / 65%);
-  background: linear-gradient(125deg, rgb(var(--client-rgb) / 23%), rgb(var(--client-rgb) / 5%)), var(--glass);
+  background: linear-gradient(125deg, rgb(var(--client-rgb) / 9%), rgb(var(--client-rgb) / 2%)), var(--glass);
   box-shadow: inset 0 1px 0 var(--glass-highlight), inset 0 -2px 0 rgb(var(--client-rgb) / 70%), 0 4px 16px rgb(var(--client-rgb) / 9%);
 }
 .crm-client-tab:hover:not(:disabled) {
@@ -297,7 +297,7 @@ button:not(:disabled), select { cursor: pointer; }
   background-color: var(--control-hover);
 }
 .crm-client-heading { color: var(--client-ink); }
-.crm-filters { background-image: linear-gradient(115deg, rgb(var(--client-rgb) / 6%), transparent 65%); }
+.crm-filters { background-image: linear-gradient(115deg, rgb(var(--client-rgb) / 2%), transparent 65%); }
 .crm-table { border-top: 2px solid rgb(var(--client-rgb) / 45%); }
 .crm-table thead { background: rgb(var(--client-rgb) / 6%); }
 .crm-table tbody tr { transition: background-color 160ms ease; }
