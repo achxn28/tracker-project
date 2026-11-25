@@ -263,3 +263,66 @@ button:not(:disabled), select { cursor: pointer; }
   color: var(--urgency-ink);
 }
 .task-timeline-marker { background: var(--urgency-ink); }
+
+/* Partner accents identify workspaces; stage labels retain their own meaning. */
+[data-client="aaf"] { --client-rgb: 64 103 207; --client-ink: #304f9e; }
+[data-client="cypress-hills"] { --client-rgb: 22 146 117; --client-ink: #12684f; }
+[data-client="brooklyn-chamber"] { --client-rgb: 139 81 198; --client-ink: #7440a5; }
+[data-client="bayside-village"] { --client-rgb: 203 112 44; --client-ink: #8d4c1b; }
+.dark [data-client="aaf"] { --client-ink: #b5caff; }
+.dark [data-client="cypress-hills"] { --client-ink: #8ae2c6; }
+.dark [data-client="brooklyn-chamber"] { --client-ink: #dbb5ff; }
+.dark [data-client="bayside-village"] { --client-ink: #ffcea7; }
+.crm-client-tab {
+  position: relative;
+  min-height: 4.5rem;
+  justify-content: flex-start;
+  padding: 1rem;
+  text-align: left;
+  color: var(--client-ink);
+  border-color: rgb(var(--client-rgb) / 25%);
+  border-top: 2px solid rgb(var(--client-rgb) / 55%);
+  background: linear-gradient(125deg, rgb(var(--client-rgb) / 9%), transparent 80%), var(--glass);
+  box-shadow: var(--glass-shadow);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+}
+.crm-client-tab[aria-pressed="true"] {
+  border-color: rgb(var(--client-rgb) / 65%);
+  background: linear-gradient(125deg, rgb(var(--client-rgb) / 23%), rgb(var(--client-rgb) / 5%)), var(--glass);
+  box-shadow: inset 0 1px 0 var(--glass-highlight), inset 0 -2px 0 rgb(var(--client-rgb) / 70%), 0 4px 16px rgb(var(--client-rgb) / 9%);
+}
+.crm-client-tab:hover:not(:disabled) {
+  border-color: rgb(var(--client-rgb) / 65%);
+  background-color: var(--control-hover);
+}
+.crm-client-heading { color: var(--client-ink); }
+.crm-filters { background-image: linear-gradient(115deg, rgb(var(--client-rgb) / 6%), transparent 65%); }
+.crm-table { border-top: 2px solid rgb(var(--client-rgb) / 45%); }
+.crm-table thead { background: rgb(var(--client-rgb) / 6%); }
+.crm-table tbody tr { transition: background-color 160ms ease; }
+.crm-table tbody tr:hover { background: rgb(var(--client-rgb) / 7%); }
+.crm-stage {
+  --stage-rgb: 100 116 139;
+  --stage-ink: #475569;
+  border: 1px solid rgb(var(--stage-rgb) / 28%);
+  background: linear-gradient(120deg, rgb(var(--stage-rgb) / 18%), rgb(var(--stage-rgb) / 7%));
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
+  color: var(--stage-ink);
+  font-size: .875rem;
+}
+.crm-stage[data-tone="green"] { --stage-rgb: 18 150 108; --stage-ink: #086546; }
+.crm-stage[data-tone="amber"] { --stage-rgb: 211 143 22; --stage-ink: #80500c; }
+.crm-stage[data-tone="blue"] { --stage-rgb: 49 111 214; --stage-ink: #2751a3; }
+.crm-stage[data-tone="violet"] { --stage-rgb: 144 83 202; --stage-ink: #7338a1; }
+.crm-stage[data-tone="red"] { --stage-rgb: 209 72 97; --stage-ink: #a12d46; }
+.dark .crm-stage { --stage-ink: #c5d0e4; }
+.dark .crm-stage[data-tone="green"] { --stage-ink: #8ce5bf; }
+.dark .crm-stage[data-tone="amber"] { --stage-ink: #f8d28f; }
+.dark .crm-stage[data-tone="blue"] { --stage-ink: #b1ceff; }
+.dark .crm-stage[data-tone="violet"] { --stage-ink: #dfb8ff; }
+.dark .crm-stage[data-tone="red"] { --stage-ink: #ffb3c2; }
+@media (prefers-reduced-transparency: reduce) {
+  .crm-client-tab { background: var(--card); backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .crm-client-tab[aria-pressed="true"] { background: color-mix(in srgb, var(--card), rgb(var(--client-rgb)) 16%); }
+}
