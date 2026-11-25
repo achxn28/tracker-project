@@ -189,3 +189,15 @@ Complete [Google Sheets setup](docs/google-sheets-setup.md) to enable the app's
 own Google authorization. Until configured, the page displays setup guidance and
 links to the four original sheets. Automated tests use mocked Google responses;
 live write verification requires your authorized Google account.
+
+## Research outreach
+
+The **Research outreach** tab at `/research` shows research opportunities in
+one professor-focused workspace. Add a university or lab, professor name and
+email, research focus, and paper or personalization notes. Track outreach in
+table or board view, log emails and replies, and schedule follow-ups.
+
+These are the same records shown in Opportunities, so existing research
+contacts appear here automatically. Activities and follow-ups continue to
+feed the dashboard, calendar, and goal progress. Logging an email records
+an action you performed; it does not send email or connect to Gmail.
