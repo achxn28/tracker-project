@@ -3,9 +3,17 @@ import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, statSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { googleAuthorization, googleConfig, googleConnection, googleScope, validGoogleState } from "../src/lib/google-connection.ts";
+import { googleAuthorization, googleConfig, googleConnection, googleRequestHostMatches, googleScope, validGoogleState } from "../src/lib/google-connection.ts";
 
 const config = { clientId: "test-client", clientSecret: "test-secret", redirectUri: "http://127.0.0.1:3000/api/google/callback", tokenPath: "unused" };
+test("OAuth trusts the incoming Host when Next normalizes the request URL", () => {
+  const callback = "http://localhost:3000/api/google/callback";
+  assert.equal(googleRequestHostMatches(config, new Request(callback, { headers: { host: "127.0.0.1:3000" } })), true);
+  for (const host of ["localhost:3000", "127.0.0.1:3001", "example.com"]) {
+    assert.equal(googleRequestHostMatches(config, new Request(callback, { headers: { host } })), false);
+  }
+  assert.equal(googleRequestHostMatches(config, new Request(callback)), false);
+});
 test("Google connection requires explicit credentials and a local callback", () => {
   assert.equal(googleConfig({}), null);
   assert.equal(googleConfig({ GOOGLE_CLIENT_ID: "id", GOOGLE_CLIENT_SECRET: "secret" })?.redirectUri, config.redirectUri);

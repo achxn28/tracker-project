@@ -22,6 +22,9 @@ export function googleAuthorization(config: GoogleConfig, now = Date.now()) {
   url.search = new URLSearchParams({ client_id: config.clientId, redirect_uri: config.redirectUri, response_type: "code", scope: googleScope, access_type: "offline", prompt: "consent", state: state.state, code_challenge: createHash("sha256").update(state.verifier).digest("base64url"), code_challenge_method: "S256" }).toString();
   return { state, url: url.toString() };
 }
+export function googleRequestHostMatches(config: GoogleConfig, request: Request) {
+  return request.headers.get("host")?.toLowerCase() === new URL(config.redirectUri).host;
+}
 export function validGoogleState(raw: string | undefined, actual: string | null, now = Date.now()): GoogleState | null {
   try {
     const state = JSON.parse(raw ?? "") as GoogleState;
