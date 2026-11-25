@@ -42,7 +42,147 @@ saves update only changed editable cells. CRM records do not contribute to
 recruiting metrics or copy into the opportunity database.
 
 Gmail tracking, AI integrations, scraping, and unrelated external APIs remain out
-of scope.
+of scope for the current MVP. The following proposal covers a possible next phase.
+
+## Proposed cloud database and Gmail sync — November 24, 2026
+
+Move the tracker database first while keeping the Next.js app on localhost.
+The current store in `src/lib/opportunities.ts` uses synchronous SQLite calls
+for opportunities, activities, tasks, goals, and preferences. Google Sheets uses
+a separate adapter, a localhost OAuth callback, and a local token file. Keep
+the four CRM workbooks as the source of truth for the Novus Clients page.
+
+### 1. Rehearse migration and restore locally
+
+- Stop the app and take a private SQLite snapshot from the configured database
+  path. Run integrity and foreign key checks on a copy and prove it restores.
+  Run any legacy upgrades for archived opportunities or activity types on a
+  disposable copy. The CSV exports omit tasks, goals, and preferences, so use
+  the database snapshot for migration and recovery.
+- Add versioned Postgres schema migrations and a transactional importer. Try
+  synthetic fixtures first, then rehearse with the backup on local Postgres.
+  Preserve IDs, links, status and archive fields, notes, timestamps, and nulls.
+  Keep calendar dates independent of timezone, retain UTC event instants, and
+  preserve the New York date rules and numeric positive-reply flag at the app
+  boundary. Preserve activity deletion and task detachment on opportunity delete.
+- Add an async server-side store so the app can select SQLite or Postgres
+  explicitly. Keep activity logging and task completion transactional, including
+  the opportunity stage and reminder changes they can trigger. Verify every
+  table by counts and normalized row comparison. Check dashboard and goal totals,
+  Research outreach, calendar and timeline dates, exports, and archive behavior
+  against the existing store. Use synthetic data for destructive parity checks.
+
+### 2. Switch the data store to Supabase Free
+
+- Rehearse on a Free project with synthetic data before transferring real rows.
+  Use TLS and dedicated, least-privilege server roles. Keep tracker tables in
+  a private schema or deny anonymous and authenticated API roles access by
+  default. Keep database credentials server-side in ignored local configuration.
+  Any later public app deployment needs sign-in and owner-level access checks
+  for pages, actions, exports, and data before exposure.
+- Pause local writes for the final snapshot and import. Verify the destination
+  and switch the local app only after the checks pass. Keep SQLite as the sole
+  writer until cutover, then Postgres as the sole writer. If validation fails
+  before reopening writes, point the app back to SQLite. If Postgres has accepted
+  writes, freeze writes and use a rehearsed, verified reverse transfer before
+  switching back. Keep private Postgres dumps and test restoring them locally so
+  recovery can start during provider unavailability.
+- Keep the existing localhost callback, Sheets grant, token file, and explicit
+  cell-save flow outside the database migration. Read all four CRMs with the
+  existing account and use mocked or disposable data to check protected cells,
+  stale-row handling, and writes. Preserve the glass UI and compact corners.
+- Supabase lists a 500 MB database, 5 GB uncached egress, inactivity pausing
+  after one week, and no automatic backups on Free. Keep recurring off-site
+  backups under the owner's control. [Supabase pricing](https://supabase.com/pricing),
+  [backup guidance](https://supabase.com/docs/guides/platform/backups).
+
+### 3. Add read-only Gmail sync as a separate integration
+
+- Use a separate OAuth client and grant for `gmail.readonly`. It grants mailbox
+  read access, so restrict what the worker fetches in code. Keep the Sheets grant
+  local and give the worker only the Gmail grant and the database permissions it
+  needs. Store worker secrets in a managed secret store and encrypt restricted
+  data at rest. Verify whether the personal-use exception applies to the hosted
+  design before deploying. Restricted scopes can require verification and a
+  third-party security assessment. External Testing refresh tokens for this
+  scope expire after seven days. Provide reconnect, revoke, and data deletion
+  controls. [Restricted scope verification](https://developers.google.com/identity/protocols/oauth2/production-readiness/restricted-scope-verification),
+  [OAuth token lifetime](https://developers.google.com/identity/protocols/oauth2#expiration),
+  [Google Workspace data policy](https://developers.google.com/workspace/workspace-api-user-data-developer-policy).
+- Use Supabase Cron and a short Edge Function as the first hosted candidate.
+  Start with one poll every 30 minutes, about 1,500 invocations in a 31-day month
+  before retries. Cap batches and runtime, use one lease per mailbox, and keep
+  retry state in Postgres. Show the last successful sync and any pause reason.
+  Free includes 500,000 invocations and a 150-second function wall time, with
+  separate CPU, storage, and egress limits. If hosting eligibility or availability
+  falls short, use a local scheduled job when the computer is on. [Scheduling](https://supabase.com/docs/guides/functions/schedule-functions),
+  [function limits](https://supabase.com/docs/guides/functions/limits),
+  [Supabase pricing](https://supabase.com/pricing).
+- Start with a bounded backfill and known contacts. Prefer explicitly linked
+  threads, then exact sender or recipient address matches to a single tracked
+  opportunity. Leave shared addresses and ambiguous matches for review. Use
+  mailbox and message metadata to distinguish received replies from sent mail.
+  Read headers first and skip bodies and attachments during the sync pilot.
+- Record a Gmail history checkpoint before scanning the backfill and then
+  catch up from that checkpoint. Write source references and queue work durably
+  before advancing the cursor, even when extraction is paused. On an expired
+  history `404`, repeat the bounded backfill for eligible threads and surface any
+  gap outside that window. Use a unique mailbox/message key, and keep retries safe with
+  transactionally claimed work and a separate idempotency key for each applied
+  change. Preserve the original email in Gmail and link suggestions and applied
+  changes to its message/thread reference. Store only metadata needed for the
+  feature, with a retention and deletion rule. If reprocessing finds a matching
+  manual activity or task, offer to link it instead of adding a duplicate.
+  [Gmail sync guide](https://developers.google.com/workspace/gmail/api/guides/sync).
+
+### 4. Evaluate extraction and decide how changes are applied
+
+- Start with synthetic fixtures. Ask the model for structured suggestions with
+  evidence for tasks, deadlines, or reply classification. Validate each field,
+  allow an unknown result, and surface ambiguous dates or intent. Treat email
+  as untrusted input and give the model no tools, credentials, or write access.
+  Verify duplicate delivery, interrupted runs, ambiguous matches, contradictory
+  due dates, stale suggestions, and recovery from quota failures.
+- Recommend review first. Show the source and proposed change, and let the owner
+  approve, edit, or dismiss it. Do not let pending suggestions affect counts or
+  the action queue. If automatic application is chosen later, begin with
+  deterministic reply tracking on explicitly linked threads. Keep model-derived
+  deadlines, positive-reply judgments, and conflicting edits in review. Apply
+  approved changes through the same tracker rules as manual actions and retain an
+  audit record. The application mode is open for decision.
+- Keep real mail out of unpaid Gemini. Google says unpaid input can be used
+  to improve its products and reviewed by people. Paid-service terms provide
+  different handling and still allow limited logging. Before sending any real
+  excerpt onward, verify Google Workspace Limited Use, consent, retention, and
+  applicable Gemini terms. The Gemini API requires users to be at least 18.
+  If these conditions or the cost target rule out Gemini, use deterministic
+  reply matching and manual task/deadline entry with source links.
+  [Gemini API terms](https://ai.google.dev/gemini-api/terms),
+  [Google Workspace data policy](https://developers.google.com/workspace/workspace-api-user-data-developer-policy).
+
+### Spending and queue behavior
+
+- Aim for $0 additional monthly spend. Google lists $10 USD per month in
+  developer credits for AI Pro, eligible for Gemini API usage. This requires
+  a linked Developer Program profile and redemption to an eligible Cloud Billing
+  account. Account entitlement, redemption, and the project billing mode still
+  need confirmation. Google documents a $5 minimum initial deposit for its
+  current paid signup flow and requires an active prepaid balance to use eligible
+  credits on Prepay. Paid activation or prepayment requires explicit approval.
+  [Developer Program benefits](https://developers.google.com/profile/help/benefits#google-cloud-credits),
+  [My Benefits](https://me.developers.google.com/benefits),
+  [Gemini API billing](https://ai.google.dev/gemini-api/docs/billing).
+- Keep paid API calls disabled by default. The proposed $2 monthly application
+  budget is undecided. If approved, use it as a gross usage ceiling for this app,
+  before credits, and reserve a conservative estimate atomically before each
+  request. Bound input, output, request count, and concurrency, and retain the
+  reservation for ambiguous timeouts until reconciled. Disable paid dispatch if
+  pricing or billing status is unknown and apply backoff for rate limits. When
+  budget or quota is exhausted, leave jobs queued with a pause
+  reason and a retry time when known. Resume after the limit resets or the owner
+  changes the setting. Credits, alerts, and provider caps do not guarantee zero
+  charges. [Cloud Billing budgets](https://docs.cloud.google.com/billing/docs/how-to/budgets),
+  [spend cap enforcement](https://docs.cloud.google.com/billing/docs/how-to/budgets-spend-caps).
 
 ## 1. Product Overview
 
