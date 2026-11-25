@@ -8,26 +8,42 @@
     background: var(--glass);
     border-color: var(--glass-edge);
     box-shadow: var(--glass-shadow);
-    -webkit-backdrop-filter: blur(14px);
-    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(18px) saturate(135%);
+    backdrop-filter: blur(18px) saturate(135%);
   }
   .tracker-button {
     @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border px-4 py-2 text-sm font-medium transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50;
-    background-color: var(--control);
-    box-shadow: none;
+    background: linear-gradient(135deg, var(--glass-highlight), transparent 65%), var(--control);
+    border-color: var(--input);
+    box-shadow: inset 0 1px 0 var(--glass-highlight), 0 2px 5px rgb(28 42 91 / 3%);
+  }
+  .tracker-button:not(.tracker-primary, .tracker-danger):hover:not(:disabled) {
+    background-color: var(--control-hover);
+    border-color: color-mix(in srgb, var(--primary) 35%, var(--input));
   }
   .tracker-primary {
     @apply border-primary text-primary-foreground hover:bg-primary/90;
-    background-color: var(--primary);
-    box-shadow: none;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--primary), white 12%), var(--primary));
+    border-color: var(--primary);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 20%), 0 3px 10px color-mix(in srgb, var(--primary) 18%, transparent);
+  }
+  .tracker-primary:hover:not(:disabled) {
+    background: var(--primary);
   }
   .tracker-danger {
     @apply border-destructive text-white hover:bg-destructive/90;
     background-color: var(--destructive);
   }
+  .tracker-danger:hover:not(:disabled) {
+    background-color: color-mix(in srgb, var(--destructive) 90%, black);
+  }
   .tracker-input {
     @apply min-h-11 w-full rounded-sm border border-input px-3 py-2 text-base focus-visible:outline-2 focus-visible:outline-offset-2 aria-invalid:border-destructive;
     background-color: var(--control);
+    box-shadow: inset 0 1px 2px rgb(28 42 91 / 3%), 0 1px 0 var(--glass-highlight);
+  }
+  .tracker-input:focus-visible {
+    background-color: var(--control-hover);
   }
   .tracker-badge {
     @apply inline-block whitespace-nowrap rounded-sm bg-muted px-2 py-1 text-xs font-medium;
@@ -81,28 +97,30 @@
 
 :root {
     color-scheme: light;
-    --glass: rgb(255 255 255 / 20%);
-    --glass-edge: rgb(255 255 255 / 45%);
-    --glass-shadow: inset 0 1px 0 rgb(255 255 255 / 25%);
-    --control: rgb(255 255 255 / 25%);
-    --background: #eaf1f1;
-    --foreground: #203c42;
-    --card: #f6faf9;
-    --card-foreground: #203c42;
+    --glass: rgb(255 255 255 / 12%);
+    --glass-edge: rgb(255 255 255 / 65%);
+    --glass-highlight: rgb(255 255 255 / 45%);
+    --glass-shadow: inset 0 1px 0 rgb(255 255 255 / 55%), inset 1px 0 0 rgb(255 255 255 / 20%), 0 8px 28px rgb(40 57 105 / 5%);
+    --control: rgb(255 255 255 / 18%);
+    --control-hover: rgb(255 255 255 / 42%);
+    --background: #edf0fa;
+    --foreground: #202d49;
+    --card: #f0f3fc;
+    --card-foreground: #202d49;
     --popover: oklch(1 0 0);
     --popover-foreground: oklch(0.145 0 0);
-    --primary: #236b61;
+    --primary: #3659ae;
     --primary-foreground: oklch(0.985 0 0);
-    --secondary: #d3e6e1;
-    --secondary-foreground: #234b45;
-    --muted: rgb(49 94 97 / 7%);
-    --muted-foreground: #536e73;
+    --secondary: #dce3fa;
+    --secondary-foreground: #354779;
+    --muted: rgb(65 80 137 / 7%);
+    --muted-foreground: #53617d;
     --accent: oklch(0.97 0 0);
     --accent-foreground: oklch(0.205 0 0);
     --destructive: oklch(0.577 0.245 27.325);
-    --border: rgb(53 85 91 / 13%);
-    --input: rgb(53 85 91 / 20%);
-    --ring: #236b61;
+    --border: rgb(57 71 116 / 14%);
+    --input: rgb(57 71 116 / 22%);
+    --ring: #3659ae;
     --chart-1: oklch(0.87 0 0);
     --chart-2: oklch(0.556 0 0);
     --chart-3: oklch(0.439 0 0);
@@ -121,22 +139,24 @@
 
 .dark {
     color-scheme: dark;
-    --glass: rgb(28 48 53 / 28%);
-    --glass-edge: rgb(185 225 221 / 15%);
-    --glass-shadow: inset 0 1px 0 rgb(209 241 236 / 5%);
-    --control: rgb(20 38 43 / 28%);
-    --background: #12282e;
-    --foreground: #e6f3f0;
-    --card: #1e353b;
-    --card-foreground: #e6f3f0;
+    --glass: rgb(21 30 54 / 20%);
+    --glass-edge: rgb(206 222 255 / 20%);
+    --glass-highlight: rgb(218 231 255 / 8%);
+    --glass-shadow: inset 0 1px 0 rgb(218 231 255 / 12%), 0 8px 28px rgb(3 8 24 / 12%);
+    --control: rgb(16 25 48 / 20%);
+    --control-hover: rgb(137 165 230 / 15%);
+    --background: #111a30;
+    --foreground: #ecf1ff;
+    --card: #202e4c;
+    --card-foreground: #ecf1ff;
     --popover: oklch(0.205 0 0);
     --popover-foreground: oklch(0.985 0 0);
-    --primary: #9bdaca;
-    --primary-foreground: #173e36;
-    --secondary: #315d58;
+    --primary: #adc6ff;
+    --primary-foreground: #152b57;
+    --secondary: #34446d;
     --secondary-foreground: oklch(0.985 0 0);
-    --muted: rgb(155 218 202 / 9%);
-    --muted-foreground: #adc4c5;
+    --muted: rgb(166 189 245 / 9%);
+    --muted-foreground: #bac7e1;
     --accent: oklch(0.269 0 0);
     --accent-foreground: oklch(0.985 0 0);
     --destructive: oklch(0.704 0.191 22.216);
@@ -174,22 +194,33 @@
 body {
   min-height: 100svh;
   background-image:
-    radial-gradient(ellipse at 8% 5%, rgb(199 231 219 / 85%), transparent 48%),
-    radial-gradient(ellipse at 92% 12%, rgb(206 223 243 / 85%), transparent 52%),
-    radial-gradient(ellipse at 65% 95%, rgb(235 230 212 / 65%), transparent 55%);
+    radial-gradient(ellipse at 2% 8%, rgb(119 185 249 / 58%), transparent 46%),
+    radial-gradient(ellipse at 92% 9%, rgb(181 153 242 / 45%), transparent 43%),
+    radial-gradient(ellipse at 72% 74%, rgb(255 179 159 / 38%), transparent 43%),
+    radial-gradient(ellipse at 12% 94%, rgb(112 217 191 / 52%), transparent 48%);
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
 }
 .dark body {
   background-image:
-    radial-gradient(ellipse at 8% 5%, rgb(45 93 80 / 50%), transparent 48%),
-    radial-gradient(ellipse at 92% 12%, rgb(48 72 112 / 45%), transparent 52%);
+    radial-gradient(ellipse at 2% 8%, rgb(45 96 181 / 48%), transparent 46%),
+    radial-gradient(ellipse at 92% 9%, rgb(123 67 168 / 38%), transparent 43%),
+    radial-gradient(ellipse at 72% 74%, rgb(165 76 95 / 23%), transparent 43%),
+    radial-gradient(ellipse at 12% 94%, rgb(28 126 123 / 35%), transparent 48%);
 }
 .tracker-sidebar {
-  background: var(--glass);
+  background: linear-gradient(150deg, var(--glass-highlight), transparent 70%), var(--glass);
   border-color: var(--glass-edge);
-  -webkit-backdrop-filter: blur(18px);
-  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  backdrop-filter: blur(24px) saturate(140%);
+  box-shadow: inset -1px 0 0 var(--glass-highlight);
+}
+.tracker-nav-link {
+  transition: background-color 160ms ease, color 160ms ease;
+}
+.tracker-nav-link[aria-current="page"] {
+  background: linear-gradient(110deg, color-mix(in srgb, var(--primary) 15%, transparent), color-mix(in srgb, var(--primary) 3%, transparent));
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
 }
 .tracker-eyebrow {
   font-size: .75rem;
@@ -206,7 +237,8 @@ body {
 button:not(:disabled), select { cursor: pointer; }
 ::selection { background: color-mix(in srgb, var(--primary) 20%, transparent); }
 @media (prefers-reduced-transparency: reduce) {
-  :root, .dark { --glass: var(--card); --control: var(--card); }
+  :root, .dark { --glass: var(--card); --control: var(--card); --control-hover: var(--card); }
+  .tracker-panel, .tracker-sidebar { backdrop-filter: none; -webkit-backdrop-filter: none; }
 }
 
 /* Due-date tints stay translucent so every task shares the glass surface. */
