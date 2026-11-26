@@ -26,50 +26,49 @@ private func drawIcon(size: Int) -> CGImage {
     let scale = CGFloat(size) / 1024
     context.translateBy(x: 0, y: CGFloat(size))
     context.scaleBy(x: scale, y: -scale)
-    let tile = rounded(CGRect(x: 89, y: 77, width: 846, height: 846), 199)
-
-    context.saveGState()
-    context.setShadow(offset: CGSize(width: 0, height: -14 * scale), blur: 32 * scale, color: ink(0x06101d, 0.43))
-    context.addPath(tile)
-    context.setFillColor(ink(0x162e43, 0.82))
-    context.fillPath()
-    context.restoreGState()
-
+    // The artwork fills the canvas, with transparent corners and no outer mat.
+    let tile = rounded(CGRect(x: 0, y: 0, width: 1024, height: 1024), 226)
     context.saveGState()
     context.addPath(tile)
     context.clip()
-    gradient(context, [ink(0xb2d8eb, 0.54), ink(0x50738c, 0.49), ink(0x102940, 0.70)],
-             from: CGPoint(x: 105, y: 80), to: CGPoint(x: 852, y: 910))
-    if let glow = CGGradient(colorsSpace: space, colors: [ink(0x61e5ee, 0.52), ink(0x61e5ee, 0)] as CFArray, locations: nil) {
-        context.drawRadialGradient(glow, startCenter: CGPoint(x: 920, y: 835), startRadius: 0,
-                                   endCenter: CGPoint(x: 920, y: 835), endRadius: 620, options: [])
+    gradient(context, [ink(0x121b58), ink(0x223db4), ink(0x109adb)],
+             from: CGPoint(x: 140, y: 5), to: CGPoint(x: 870, y: 1005))
+    if let glow = CGGradient(colorsSpace: space,
+        colors: [ink(0x66f4ee, 0.72), ink(0x43d8f0, 0)] as CFArray, locations: nil) {
+        context.drawRadialGradient(glow, startCenter: CGPoint(x: 980, y: 990), startRadius: 0,
+                                   endCenter: CGPoint(x: 980, y: 990), endRadius: 816, options: [])
     }
-    let bevel = rounded(CGRect(x: 98, y: 86, width: 828, height: 828), 192)
-    context.addPath(bevel)
-    context.setLineWidth(8)
+    if let highlight = CGGradient(colorsSpace: space,
+        colors: [ink(0xa4c6ff, 0.51), ink(0xa4c6ff, 0)] as CFArray, locations: nil) {
+        context.drawRadialGradient(highlight, startCenter: CGPoint(x: 490, y: -230), startRadius: 0,
+                                   endCenter: CGPoint(x: 490, y: -230), endRadius: 750, options: [])
+    }
+
+    context.saveGState()
+    context.addPath(rounded(CGRect(x: 4, y: 4, width: 1016, height: 1016), 223))
+    context.setLineWidth(7)
     context.replacePathWithStrokedPath()
     context.clip()
-    gradient(context, [ink(0xeeffff, 0.80), ink(0xdeeeff, 0.13), ink(0x9af0ff, 0.53)],
-             from: CGPoint(x: 512, y: 85), to: CGPoint(x: 512, y: 910))
+    gradient(context, [ink(0xe5f3ff, 0.51), ink(0xa9c5ff, 0.06), ink(0xc6fff8, 0.29)],
+             from: CGPoint(x: 512, y: 0), to: CGPoint(x: 512, y: 1024))
     context.restoreGState()
 
-    let card = rounded(CGRect(x: 280, y: 268, width: 464, height: 458), 110)
-    context.addPath(card)
-    context.setFillColor(ink(0xd7eeff, 0.10))
+    let check = CGMutablePath()
+    check.move(to: CGPoint(x: 268, y: 516))
+    check.addLine(to: CGPoint(x: 438, y: 686))
+    check.addLine(to: CGPoint(x: 765, y: 330))
+    let mark = check.copy(strokingWithWidth: 111, lineCap: .round, lineJoin: .round, miterLimit: 1)
+    context.saveGState()
+    context.setShadow(offset: CGSize(width: 0, height: -18 * scale), blur: 28 * scale, color: ink(0x132354, 0.39))
+    context.addPath(mark)
+    context.setFillColor(ink(0xf7fcff))
     context.fillPath()
-    context.addPath(card)
-    context.setStrokeColor(ink(0xd7eeff, 0.60))
-    context.setLineWidth(14)
-    context.strokePath()
-
-    context.setLineCap(.round)
-    context.setLineJoin(.round)
-    context.setStrokeColor(ink(0xf4feff))
-    context.setLineWidth(52)
-    context.move(to: CGPoint(x: 386, y: 506))
-    context.addLine(to: CGPoint(x: 475, y: 594))
-    context.addLine(to: CGPoint(x: 639, y: 423))
-    context.strokePath()
+    context.restoreGState()
+    context.addPath(mark)
+    context.clip()
+    gradient(context, [ink(0xffffff), ink(0xf1fbff), ink(0xc0f2ff)],
+             from: CGPoint(x: 490, y: 282), to: CGPoint(x: 490, y: 759))
+    context.restoreGState()
     return context.makeImage()!
 }
 

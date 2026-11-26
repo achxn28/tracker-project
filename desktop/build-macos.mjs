@@ -35,8 +35,8 @@ try {
   <key>CFBundleName</key><string>Tracker</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleIconFile</key><string>Tracker.icns</string>
-  <key>CFBundleVersion</key><string>2</string>
-  <key>CFBundleShortVersionString</key><string>1.1</string>
+  <key>CFBundleVersion</key><string>3</string>
+  <key>CFBundleShortVersionString</key><string>1.2</string>
   <key>LSMinimumSystemVersion</key><string>13.0</string>
   <key>NSHighResolutionCapable</key><true/>
   <key>TrackerWorkspace</key><string>${xml(repo)}</string>
