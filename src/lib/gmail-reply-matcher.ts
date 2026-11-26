@@ -66,3 +66,27 @@ export function createGmailReplyMatcher(context: GmailReplyContext) {
     return null;
   };
 }
+
+type GmailReplyIdentity = Pick<GmailReplySource, "mailboxId" | "messageId">;
+
+export function collectGmailReplyCandidates(
+  context: GmailReplyContext,
+  messages: readonly GmailMessageMetadata[],
+  knownSources: Iterable<GmailReplyIdentity> = [],
+): GmailReplyCandidate[] {
+  const keyOf = ({ mailboxId, messageId }: GmailReplyIdentity) => JSON.stringify([mailboxId, messageId]);
+  const seen = new Set<string>();
+  for (const source of knownSources) seen.add(keyOf(source));
+
+  const match = createGmailReplyMatcher(context);
+  const results: GmailReplyCandidate[] = [];
+  for (const message of messages) {
+    const candidate = match(message);
+    if (!candidate) continue;
+    const key = keyOf(candidate);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    results.push(candidate);
+  }
+  return results;
+}

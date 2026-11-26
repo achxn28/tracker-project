@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { createGmailReplyMatcher, type GmailReplyContext, type GmailTrackedOpportunity } from "../src/lib/gmail-reply-matcher.ts";
+import { collectGmailReplyCandidates, createGmailReplyMatcher, type GmailReplyContext, type GmailTrackedOpportunity } from "../src/lib/gmail-reply-matcher.ts";
 import type { GmailMessageMetadata } from "../src/lib/gmail-reply-metadata.ts";
 
 function opportunity(id: string, contact_email: string | null, overrides: Partial<GmailTrackedOpportunity> = {}): GmailTrackedOpportunity {
@@ -76,4 +76,31 @@ test("skips self replies and inactive records, and never redirects an inactive l
   assert.equal(active.opportunityId, "active");
   assert.equal(match(message(undefined, "alias@school.example")), null);
   assert.equal(match(message(undefined, undefined, "inactive-thread")), null);
+});
+
+test("replays produce one candidate per mailbox and message, including unassigned candidates", () => {
+  const tracked = context({ opportunities: [
+    opportunity("one", "person@college.example"),
+    opportunity("two", "person@college.example"),
+  ] });
+  const first = message();
+  const second = message("gmail-msg-2");
+  const all = collectGmailReplyCandidates(tracked, [first, first, second, second]);
+  assert.deepEqual(all.map(candidate => [candidate.messageId, candidate.state]), [
+    ["gmail-msg-1", "needs-review"], ["gmail-msg-2", "needs-review"],
+  ]);
+  // The worker can pass source IDs for candidates it already saved, including
+  // those that were reviewed or dismissed.
+  assert.deepEqual(collectGmailReplyCandidates(tracked, [first, second], [{ mailboxId: "mailbox-a", messageId: "gmail-msg-1" }]), all.slice(1));
+  assert.deepEqual(collectGmailReplyCandidates(tracked, [second, first], all), []);
+  assert.equal(collectGmailReplyCandidates({ ...tracked, mailboxId: "mailbox-b" }, [first], all).length, 1);
+});
+
+test("ignoring a non-match does not prevent a later match after a contact is added", () => {
+  const first = message();
+  const known = collectGmailReplyCandidates(context(), [first]);
+  assert.deepEqual(known, []);
+  const later = context({ opportunities: [opportunity("new", "person@college.example")] });
+  const matched = collectGmailReplyCandidates(later, [first], known);
+  assert.equal(matched[0]?.state, "matched");
 });
