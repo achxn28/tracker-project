@@ -13,7 +13,8 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "node --conditions=react-server --test tests/*.test.ts",
     "test:postgres": "node --conditions=react-server --test tests/integration/*.test.ts",
-    "db:backup": "node --conditions=react-server scripts/backup-sqlite.ts"
+    "db:backup": "node --conditions=react-server scripts/backup-sqlite.ts",
+    "db:import": "node --conditions=react-server scripts/import-sqlite.ts"
   },
   "dependencies": {
     "cn": "^0.5.2",
