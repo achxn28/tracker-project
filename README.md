@@ -29,6 +29,9 @@ Both development and production servers bind to `127.0.0.1` for local use.
 The app has no sign-in and defaults to SQLite. See the [Postgres migration
 runbook](docs/postgres-migration.md) for the optional database backend.
 
+On a Mac, see the [desktop launcher guide](docs/macos-launcher.md) to open
+the tracker in its own window without starting the server by hand.
+
 ## Local data
 
 The database is created automatically at `data/opportunities.sqlite`. Records

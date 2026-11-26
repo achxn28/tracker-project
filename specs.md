@@ -46,7 +46,7 @@ of scope for the current MVP. The following proposal covers a possible next phas
 
 ## macOS launcher
 
-Ship a Dock launcher for this Mac first. Opening Tracker from Applications or
+The [Dock launcher](docs/macos-launcher.md) is implemented for this Mac. Opening Tracker from Applications or
 the Dock should start the existing Next.js server from the local checkout and
 show the tracker in its own window. Keep the current glass UI, live Supabase
 connection, and four Novus Sheets CRMs. Use the existing ignored configuration
