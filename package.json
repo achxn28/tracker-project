@@ -15,7 +15,8 @@
     "test:postgres": "node --conditions=react-server --test tests/integration/*.test.ts",
     "db:backup": "node --conditions=react-server scripts/backup-sqlite.ts",
     "db:import": "node --conditions=react-server scripts/import-sqlite.ts",
-    "db:restore": "node --conditions=react-server scripts/restore-sqlite.ts"
+    "db:restore": "node --conditions=react-server scripts/restore-sqlite.ts",
+    "desktop:build": "node desktop/build-macos.mjs"
   },
   "dependencies": {
     "cn": "^0.5.2",
