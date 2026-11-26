@@ -8,7 +8,7 @@ import { activityTypes, opportunityAfterActivity, type Activity, type ActivityIn
 import { taskCategories, type Task, type TaskInput } from "./task-model.ts";
 import { goalMetrics, type Goal, type GoalInput } from "./goal-model.ts";
 
-const columns = ["organization_name", "title", "type", "status", "priority", "work_arrangement", ...optionalFields, "closed_outcome"] as const;
+export const opportunityColumns = ["organization_name", "title", "type", "status", "priority", "work_arrangement", ...optionalFields, "closed_outcome"] as const;
 const sqlOptions = (values: readonly string[]) => values.map(value => `'${value}'`).join(", ");
 
 export function openOpportunityStore(filename: string) {
@@ -116,13 +116,13 @@ export function openOpportunityStore(filename: string) {
     create(data: OpportunityInput) {
       const id = randomUUID();
       const timestamp = new Date().toISOString();
-      db.prepare(`INSERT INTO opportunities (id, ${columns.join(", ")}, created_at, updated_at) VALUES (?, ${columns.map(() => "?").join(", ")}, ?, ?)`)
-        .run(id, ...columns.map(key => data[key]), timestamp, timestamp);
+      db.prepare(`INSERT INTO opportunities (id, ${opportunityColumns.join(", ")}, created_at, updated_at) VALUES (?, ${opportunityColumns.map(() => "?").join(", ")}, ?, ?)`)
+        .run(id, ...opportunityColumns.map(key => data[key]), timestamp, timestamp);
       return id;
     },
     update(id: string, data: OpportunityInput) {
-      return db.prepare(`UPDATE opportunities SET ${columns.map(key => `${key} = ?`).join(", ")}, updated_at = ? WHERE id = ?`)
-        .run(...columns.map(key => data[key]), new Date().toISOString(), id).changes > 0;
+      return db.prepare(`UPDATE opportunities SET ${opportunityColumns.map(key => `${key} = ?`).join(", ")}, updated_at = ? WHERE id = ?`)
+        .run(...opportunityColumns.map(key => data[key]), new Date().toISOString(), id).changes > 0;
     },
     delete: (id: string) => db.prepare("DELETE FROM opportunities WHERE id = ?").run(id).changes > 0,
     archive(id: string, archived: boolean) {
