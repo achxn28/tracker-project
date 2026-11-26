@@ -201,4 +201,8 @@ table or board view, log emails and replies, and schedule follow-ups.
 These are the same records shown in Opportunities, so existing research
 contacts appear here automatically. Activities and follow-ups continue to
 feed the dashboard, calendar, and goal progress. Logging an email records
-an action you performed; it does not send email or connect to Gmail.
+an action you performed; it does not send email.
+
+Settings supports a separate read-only Gmail connection. See [Gmail setup](docs/gmail-setup.md).
+The connection verifies the mailbox on authorization. Email sync and the review
+queue are still pending.

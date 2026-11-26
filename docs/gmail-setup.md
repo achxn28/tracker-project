@@ -1,0 +1,48 @@
+# Connect a Gmail mailbox
+
+The Gmail connection is separate from the four Novus Sheets CRMs. It requests
+only `gmail.readonly`. Connecting reads the mailbox address to verify which
+account was authorized. This release has no mailbox scan, background job, or
+review UI.
+
+1. Create a **separate Google Cloud project** for Gmail. Enable the Gmail API.
+   Keep the project used by the Sheets connection separate, since Google
+   revokes OAuth grants for the entire project.
+2. Set up the consent screen. For a personal External app in Testing, add
+   your own Google account as a test user. Add
+   `https://www.googleapis.com/auth/gmail.readonly` to the requested scopes.
+3. Create a **Web application** OAuth client with authorized redirect URI
+   `http://127.0.0.1:3000/api/gmail/callback`. If selecting another local
+   port or hostname, update both the authorized URI and the local setting.
+4. Add these settings to the existing ignored `.env.local`. Generate a
+   separate 32-byte hex key locally, for example with `openssl rand -hex 32`.
+   Keep the key stable and keep all credential values out of Git and chat.
+
+   ```dotenv
+   GMAIL_CLIENT_ID=your-gmail-client-id
+   GMAIL_CLIENT_SECRET=your-gmail-client-secret
+   GMAIL_REDIRECT_URI=http://127.0.0.1:3000/api/gmail/callback
+   GMAIL_DATA_KEY=your-64-character-hex-key
+   ```
+
+5. Restart the tracker and open **Settings → Gmail → Connect Gmail**. Sign in
+   as the mailbox you intend to use and review Google's read access prompt.
+
+Use **Disconnect Gmail** to revoke the Gmail project's grant and remove the
+saved credential. The local authorization file lives under `data/gmail/`
+and is encrypted using `GMAIL_DATA_KEY`. If that key is lost, revoke the old
+project grant in your [Google Account connections](https://myaccount.google.com/connections)
+before removing the unreadable token file and reconnecting. Testing-mode grants
+can require reconnection after seven days.
+
+The local candidate database in `data/gmail/` encrypts the stored candidate and
+uses a keyed mailbox and message pair to reject replays across restarts. No
+message bodies, attachments, or raw headers are kept by the matcher. Supabase
+continues to store the core tracker data. Live candidate intake and hosted
+Gmail processing require a separate setup. Before hosting restricted Gmail data,
+check Google's Limited Use, verification, and security assessment requirements.
+
+See [Gmail scopes](https://developers.google.com/workspace/gmail/api/auth/scopes),
+[Google OAuth](https://developers.google.com/identity/protocols/oauth2/web-server#tokenrevoke),
+[OAuth token expiration](https://developers.google.com/identity/protocols/oauth2#expiration),
+and [restricted scope verification](https://developers.google.com/identity/protocols/oauth2/production-readiness/restricted-scope-verification).

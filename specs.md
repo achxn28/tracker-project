@@ -108,8 +108,11 @@ spam, trash, self replies, and messages marked as automated or from a mailing
 list. Reply headers are evidence for a candidate. A candidate needs review before
 it can change tracker records. Matching is limited to open, unarchived research
 opportunities. The matcher deduplicates candidates by mailbox and Gmail message
-ID using a batch plus any known source IDs supplied by the caller. OAuth,
-persistent deduplication, and the review UI remain future work.
+ID. The [local Gmail connection](docs/gmail-setup.md) and the encrypted
+local candidate database are implemented and tested with fixtures. The
+database stores the source and candidate together under a unique mailbox and
+message key. Live mailbox sync, the review UI, and hosted Gmail processing
+remain future work.
 
 - Use a separate OAuth client and grant for `gmail.readonly`. It grants mailbox
   read access, so restrict what the worker fetches in code. Keep the Sheets grant
