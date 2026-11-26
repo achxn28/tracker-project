@@ -1,13 +1,15 @@
 import "server-only";
-import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync, renameSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { startGoogleAuthorization } from "./google-oauth.ts";
+
+export { googleRequestHostMatches, validGoogleState, type GoogleState } from "./google-oauth.ts";
 
 type Tokens = { access_token: string; refresh_token?: string; expires_at: number };
 export type GoogleConfig = { clientId: string; clientSecret: string; redirectUri: string; tokenPath: string };
 export const googleScope = "https://www.googleapis.com/auth/spreadsheets";
 export const oauthCookie = "tracker_google_oauth";
-export type GoogleState = { state: string; verifier: string; createdAt: number };
 
 export function googleConfig(env: Record<string, string | undefined> = process.env): GoogleConfig | null {
   if (!env.GOOGLE_CLIENT_ID?.trim() || !env.GOOGLE_CLIENT_SECRET?.trim()) return null;
@@ -17,21 +19,7 @@ export function googleConfig(env: Record<string, string | undefined> = process.e
   return { clientId: env.GOOGLE_CLIENT_ID.trim(), clientSecret: env.GOOGLE_CLIENT_SECRET.trim(), redirectUri, tokenPath: join(process.cwd(), "data", "google", "tokens.json") };
 }
 export function googleAuthorization(config: GoogleConfig, now = Date.now()) {
-  const state: GoogleState = { state: randomBytes(32).toString("base64url"), verifier: randomBytes(48).toString("base64url"), createdAt: now };
-  const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
-  url.search = new URLSearchParams({ client_id: config.clientId, redirect_uri: config.redirectUri, response_type: "code", scope: googleScope, access_type: "offline", prompt: "consent", state: state.state, code_challenge: createHash("sha256").update(state.verifier).digest("base64url"), code_challenge_method: "S256" }).toString();
-  return { state, url: url.toString() };
-}
-export function googleRequestHostMatches(config: GoogleConfig, request: Request) {
-  return request.headers.get("host")?.toLowerCase() === new URL(config.redirectUri).host;
-}
-export function validGoogleState(raw: string | undefined, actual: string | null, now = Date.now()): GoogleState | null {
-  try {
-    const state = JSON.parse(raw ?? "") as GoogleState;
-    if (typeof actual !== "string" || !/^[\w-]{43}$/.test(actual) || typeof state.state !== "string" || !/^[\w-]{64}$/.test(state.verifier) || !Number.isFinite(state.createdAt) || now - state.createdAt > 600000 || now < state.createdAt) return null;
-    const expected = Buffer.from(state.state); const received = Buffer.from(actual);
-    return expected.length === received.length && timingSafeEqual(expected, received) ? state : null;
-  } catch { return null; }
+  return startGoogleAuthorization(config, googleScope, now);
 }
 export function googleConnection(config: GoogleConfig, fetcher: typeof fetch = fetch, now = Date.now) {
   function read(): Tokens | null {
