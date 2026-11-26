@@ -1,5 +1,5 @@
 import { strict as assert } from "node:assert";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
@@ -7,7 +7,7 @@ import { test } from "node:test";
 import { openOpportunityStore } from "../../src/lib/opportunities.ts";
 import { parseOpportunity } from "../../src/lib/opportunity-model.ts";
 import { postgresTrackerStore } from "../../src/lib/tracker-postgres.ts";
-import { importTrackerSqlite } from "../../src/lib/tracker-transfer.ts";
+import { importTrackerSqlite, restoreTrackerSqlite } from "../../src/lib/tracker-transfer.ts";
 import { withTestPostgres } from "./postgres-fixture.ts";
 
 test("SQLite import preserves all tracker tables, upgrades copies, and rolls back failures", async () => {
@@ -69,6 +69,46 @@ test("SQLite import preserves all tracker tables, upgrades copies, and rolls bac
     } finally {
       unchanged.close();
     }
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test("reverse transfer publishes a private SQLite file with fresh Postgres writes", async () => {
+  const directory = mkdtempSync(join(tmpdir(), "tracker-restore-test-"));
+  const source = join(directory, "before-cutover.sqlite");
+  const output = join(directory, "after-cutover.sqlite");
+  try {
+    const original = openOpportunityStore(source);
+    const id = original.create(parseOpportunity({
+      organization_name: "Fixture lab", title: "Research", type: "Research", status: "Saved",
+    }).data!);
+    original.close();
+
+    await withTestPostgres(async pool => {
+      await importTrackerSqlite(source, pool);
+      const postgres = postgresTrackerStore(pool);
+      const task = await postgres.createTask({
+        opportunity_id: id, title: "Created after cutover", category: "Research",
+        description: null, priority: "medium", start_date: null, due_date: "2027-03-15",
+      });
+      await postgres.archive(id, true);
+      await postgres.completeTask(task, true);
+      await postgres.setFollowUpDays(14);
+      assert.deepEqual(await restoreTrackerSqlite(pool, output),
+        { opportunities: 1, activities: 0, tasks: 1, goals: 0, preferences: 1 });
+      assert.equal(statSync(output).mode & 0o777, 0o600);
+      await assert.rejects(restoreTrackerSqlite(pool, source), { code: "EEXIST" });
+
+      const restored = openOpportunityStore(output);
+      try {
+        assert.deepEqual(restored.get(id), await postgres.get(id));
+        assert.deepEqual(restored.getTask(task), await postgres.getTask(task));
+        assert.equal(restored.preferences().follow_up_days, 14);
+      } finally {
+        restored.close();
+      }
+    });
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }
