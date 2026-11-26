@@ -15,10 +15,18 @@ mkdirSync(build, { recursive: true });
 const stage = mkdtempSync(join(build, "tracker-launcher-"));
 const bundle = join(stage, "Tracker.app");
 const executable = join(bundle, "Contents", "MacOS", "Tracker");
+const resources = join(bundle, "Contents", "Resources");
 const xml = value => value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 
 try {
   mkdirSync(dirname(executable), { recursive: true });
+  mkdirSync(resources);
+  const iconset = join(stage, "Tracker.iconset");
+  const drawIcon = join(stage, "tracker-icon");
+  mkdirSync(iconset);
+  execFileSync("/usr/bin/xcrun", ["swiftc", "-parse-as-library", join(repo, "desktop", "TrackerIcon.swift"), "-o", drawIcon], { stdio: "inherit" });
+  execFileSync(drawIcon, [iconset], { stdio: "inherit" });
+  execFileSync("/usr/bin/iconutil", ["-c", "icns", iconset, "-o", join(resources, "Tracker.icns")], { stdio: "inherit" });
   writeFileSync(join(bundle, "Contents", "Info.plist"), `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
@@ -26,8 +34,9 @@ try {
   <key>CFBundleIdentifier</key><string>local.tracker.desktop</string>
   <key>CFBundleName</key><string>Tracker</string>
   <key>CFBundlePackageType</key><string>APPL</string>
-  <key>CFBundleVersion</key><string>1</string>
-  <key>CFBundleShortVersionString</key><string>1.0</string>
+  <key>CFBundleIconFile</key><string>Tracker.icns</string>
+  <key>CFBundleVersion</key><string>2</string>
+  <key>CFBundleShortVersionString</key><string>1.1</string>
   <key>LSMinimumSystemVersion</key><string>13.0</string>
   <key>NSHighResolutionCapable</key><true/>
   <key>TrackerWorkspace</key><string>${xml(repo)}</string>
