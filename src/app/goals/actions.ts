@@ -1,17 +1,19 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { withOpportunities } from "@/lib/opportunities";
+import { withTrackerStore } from "@/lib/tracker-store";
 import { goalWithProgress, parseGoal, type GoalView } from "@/lib/goal-model";
 
 export async function saveGoal(id: string | null, form: FormData): Promise<{ saved?: GoalView; errors?: Record<string, string>; message?: string }> {
   const result = parseGoal(Object.fromEntries(form));
   if (result.errors) return { errors: result.errors, message: "Check the highlighted fields." };
   try {
-    const saved = withOpportunities(store => {
-      const savedId = id ?? store.createGoal(result.data);
-      if (id && !store.updateGoal(id, result.data)) throw new Error("missing");
-      return goalWithProgress(store.goals().find(goal => goal.id === savedId)!, { opportunities: store.list(), activities: store.allActivities(), tasks: store.tasks() });
+    const saved = await withTrackerStore(async store => {
+      const savedId = id ?? await store.createGoal(result.data);
+      if (id && !(await store.updateGoal(id, result.data))) throw new Error("missing");
+      const [goal, opportunities, activities, tasks] = await Promise.all([store.getGoal(savedId), store.list(), store.allActivities(), store.tasks()]);
+      if (!goal) throw new Error("missing");
+      return goalWithProgress(goal, { opportunities, activities, tasks });
     });
     revalidatePath("/goals"); revalidatePath("/"); revalidatePath("/timeline");
     return { saved };
@@ -19,6 +21,6 @@ export async function saveGoal(id: string | null, form: FormData): Promise<{ sav
 }
 
 export async function deleteGoal(id: string): Promise<{ message?: string }> {
-  try { withOpportunities(store => store.deleteGoal(id)); revalidatePath("/goals"); revalidatePath("/"); revalidatePath("/timeline"); return {}; }
+  try { await withTrackerStore(store => store.deleteGoal(id)); revalidatePath("/goals"); revalidatePath("/"); revalidatePath("/timeline"); return {}; }
   catch { return { message: "The goal could not be deleted. Please try again." }; }
 }

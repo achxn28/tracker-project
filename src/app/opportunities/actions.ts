@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { parseOpportunity, type Opportunity } from "@/lib/opportunity-model";
-import { withOpportunities } from "@/lib/opportunities";
+import { withTrackerStore } from "@/lib/tracker-store";
 import { parseActivity, type Activity } from "@/lib/activity-model";
 
 function refreshWorkspace() {
@@ -12,14 +12,14 @@ function refreshWorkspace() {
 export async function archiveOpportunity(id: string, archived: boolean): Promise<{ saved?: Opportunity; message?: string }> {
   if (typeof archived !== "boolean") return { message: "Choose a valid archive state." };
   try {
-    const saved = withOpportunities(store => { if (!store.archive(id, archived)) throw new Error("missing"); return store.get(id)!; });
+    const saved = await withTrackerStore(async store => { if (!(await store.archive(id, archived))) throw new Error("missing"); return (await store.get(id))!; });
     refreshWorkspace(); return { saved };
   } catch { return { message: "The opportunity could not be archived or restored. Please try again." }; }
 }
 
 export async function getActivities(id: string): Promise<{ activities?: Activity[]; message?: string }> {
   try {
-    return withOpportunities(store => store.get(id) ? { activities: store.activities(id) } : { message: "This opportunity no longer exists." });
+    return await withTrackerStore(async store => (await store.get(id)) ? { activities: await store.activities(id) } : { message: "This opportunity no longer exists." });
   } catch { return { message: "Activity history could not be loaded. Please try again." }; }
 }
 
@@ -29,9 +29,9 @@ export async function logActivity(id: string, form: FormData): Promise<{ saved?:
   let saved: Opportunity;
   let activities: Activity[];
   try {
-    const response = withOpportunities(store => {
-      store.logActivity(id, result.data);
-      return { saved: store.get(id)!, activities: store.activities(id) };
+    const response = await withTrackerStore(async store => {
+      await store.logActivity(id, result.data);
+      return { saved: (await store.get(id))!, activities: await store.activities(id) };
     });
     saved = response.saved;
     activities = response.activities;
@@ -45,10 +45,10 @@ export async function saveOpportunity(id: string | null, form: FormData): Promis
   if (result.errors) return { errors: result.errors, message: "Check the highlighted fields." };
   let saved: Opportunity;
   try {
-    saved = withOpportunities(store => {
-      const savedId = id ?? store.create(result.data);
-      if (id && !store.update(id, result.data)) throw new Error("missing");
-      return store.get(savedId)!;
+    saved = await withTrackerStore(async store => {
+      const savedId = id ?? await store.create(result.data);
+      if (id && !(await store.update(id, result.data))) throw new Error("missing");
+      return (await store.get(savedId))!;
     });
   } catch { return { message: "The opportunity could not be saved. Your entries are still here; please try again." }; }
   refreshWorkspace();
@@ -56,7 +56,7 @@ export async function saveOpportunity(id: string | null, form: FormData): Promis
 }
 
 export async function deleteOpportunity(id: string): Promise<{ message?: string }> {
-  try { withOpportunities(store => store.delete(id)); }
+  try { await withTrackerStore(store => store.delete(id)); }
   catch { return { message: "The opportunity could not be deleted. Please try again." }; }
   refreshWorkspace();
   return {};

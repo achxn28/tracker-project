@@ -1,7 +1,7 @@
 import "server-only";
 import { DatabaseSync } from "node:sqlite";
 import { mkdirSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname } from "node:path";
 import { randomUUID } from "node:crypto";
 import { arrangements, opportunityTypes, optionalFields, outcomes, priorities, statuses, type Opportunity, type OpportunityInput } from "./opportunity-model.ts";
 import { activityTypes, opportunityAfterActivity, type Activity, type ActivityInput } from "./activity-model.ts";
@@ -209,9 +209,4 @@ export function openOpportunityStore(filename: string) {
     },
     close: () => db.close(),
   };
-}
-
-export function withOpportunities<T>(operation: (store: ReturnType<typeof openOpportunityStore>) => T): T {
-  const store = openOpportunityStore(process.env.OPPORTUNITY_DB_PATH || join(process.cwd(), "data", "opportunities.sqlite"));
-  try { return operation(store); } finally { store.close(); }
 }
