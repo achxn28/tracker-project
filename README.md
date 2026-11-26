@@ -26,7 +26,8 @@ Open [localhost:3000](http://localhost:3000). The homepage opens the dashboard.
 Use the navigation to switch between Dashboard, Timeline, Opportunities, Tasks,
 Goals, and Settings.
 Both development and production servers bind to `127.0.0.1` for local use.
-There is no sign-in or cloud database.
+The app has no sign-in and defaults to SQLite. See the [Postgres migration
+runbook](docs/postgres-migration.md) for the optional database backend.
 
 ## Local data
 

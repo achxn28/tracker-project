@@ -46,6 +46,10 @@ of scope for the current MVP. The following proposal covers a possible next phas
 
 ## Proposed cloud database and Gmail sync — November 24, 2026
 
+The optional Postgres backend, backup, import, and restore commands are
+implemented. SQLite remains the default. See the [migration runbook](docs/postgres-migration.md)
+for rehearsal and cutover. Gmail sync and extraction are still proposed.
+
 Move the tracker database first while keeping the Next.js app on localhost.
 The current store in `src/lib/opportunities.ts` uses synchronous SQLite calls
 for opportunities, activities, tasks, goals, and preferences. Google Sheets uses
