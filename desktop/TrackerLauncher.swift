@@ -6,6 +6,9 @@ final class TrackerLauncher: NSObject, NSApplicationDelegate, WKNavigationDelega
     private var window: NSWindow?
     private var server: TrackerServer?
     private var startup: Task<Void, Never>?
+    private var refreshOnReturn = false
+    private let browserAuth = ["/api/google/connect", "/api/gmail/connect"]
+    private let browserExports = ["/export/opportunities", "/export/activities"]
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         configureMenu()
@@ -39,6 +42,13 @@ final class TrackerLauncher: NSObject, NSApplicationDelegate, WKNavigationDelega
                 server?.stop()
                 showMessage(error.localizedDescription)
             }
+        }
+    }
+
+    func applicationDidBecomeActive(_ notification: Notification) {
+        if refreshOnReturn, let view = window?.contentView as? WKWebView {
+            refreshOnReturn = false
+            view.reload()
         }
     }
 
@@ -94,9 +104,27 @@ final class TrackerLauncher: NSObject, NSApplicationDelegate, WKNavigationDelega
         _ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
         decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
     ) {
-        guard let url = navigationAction.request.url, let origin = server?.config.origin,
-              url.scheme == origin.scheme, url.host == origin.host, url.port == origin.port
-        else {
+        guard let url = navigationAction.request.url, let origin = server?.config.origin else {
+            decisionHandler(.cancel)
+            return
+        }
+        let isTracker = url.scheme == origin.scheme && url.host == origin.host && url.port == origin.port
+        if !isTracker {
+            if navigationAction.navigationType == .linkActivated,
+               let scheme = url.scheme?.lowercased(), ["https", "http", "mailto"].contains(scheme) {
+                NSWorkspace.shared.open(url)
+            }
+            decisionHandler(.cancel)
+            return
+        }
+        if browserAuth.contains(url.path) {
+            // The system browser must receive both OAuth state and callback.
+            refreshOnReturn = NSWorkspace.shared.open(url)
+            decisionHandler(.cancel)
+            return
+        }
+        if browserExports.contains(url.path) {
+            NSWorkspace.shared.open(url)
             decisionHandler(.cancel)
             return
         }
