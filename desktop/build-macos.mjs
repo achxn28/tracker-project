@@ -39,6 +39,7 @@ try {
   <key>CFBundleShortVersionString</key><string>1.2</string>
   <key>LSMinimumSystemVersion</key><string>13.0</string>
   <key>NSHighResolutionCapable</key><true/>
+  <key>NSDesktopFolderUsageDescription</key><string>Tracker uses its project folder on Desktop to start the local server.</string>
   <key>TrackerWorkspace</key><string>${xml(repo)}</string>
   <key>TrackerNode</key><string>${xml(process.execPath)}</string>
   <key>TrackerPort</key><integer>${port}</integer>

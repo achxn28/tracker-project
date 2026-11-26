@@ -6,6 +6,12 @@ its installed dependencies, production build, and ignored local settings. Your
 Supabase configuration, Google authorization, and local files stay in the
 checkout.
 
+Tracker opens in a compact, rounded window. The glass uses macOS's own
+window backdrop and does not request Screen Recording. If macOS asks for
+Desktop folder access, it is because the checkout is on Desktop. macOS
+manages that permission, and locally signed development builds can ask again
+after an update.
+
 ## Build the launcher
 
 Use Node.js 24 or later and the macOS Command Line Tools. From the repository:
