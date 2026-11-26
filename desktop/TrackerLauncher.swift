@@ -4,6 +4,8 @@ import WebKit
 @MainActor
 final class TrackerLauncher: NSObject, NSApplicationDelegate, WKNavigationDelegate {
     private var window: NSWindow?
+    private var glass: NSVisualEffectView?
+    private var content: NSView?
     private var server: TrackerServer?
     private var startup: Task<Void, Never>?
     private var refreshOnReturn = false
@@ -17,14 +19,28 @@ final class TrackerLauncher: NSObject, NSApplicationDelegate, WKNavigationDelega
         let height = min(680, visibleFrame.height * 0.78)
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: width, height: height),
-            styleMask: [.titled, .closable, .miniaturizable, .resizable],
+            styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
             backing: .buffered, defer: false
         )
         window.title = "Tracker"
+        window.titlebarAppearsTransparent = true
+        window.isOpaque = false
+        window.backgroundColor = .clear
+        window.hasShadow = true
         window.minSize = NSSize(width: min(640, width), height: min(480, height))
         window.isReleasedWhenClosed = false
         window.center()
         self.window = window
+        let glass = NSVisualEffectView()
+        glass.material = .sidebar
+        glass.blendingMode = .behindWindow
+        glass.state = .active
+        glass.wantsLayer = true
+        glass.layer?.cornerRadius = 22
+        glass.layer?.cornerCurve = .continuous
+        glass.layer?.masksToBounds = true
+        window.contentView = glass
+        self.glass = glass
         showMessage("Opening Tracker…", spinning: true)
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
@@ -35,9 +51,17 @@ final class TrackerLauncher: NSObject, NSApplicationDelegate, WKNavigationDelega
                 self.server = server
                 try await server.start()
                 try Task.checkCancellation()
-                let view = WKWebView()
+                let configuration = WKWebViewConfiguration()
+                configuration.applicationNameForUserAgent = "TrackerDesktop/1"
+                // On macOS WebKit normally paints a solid canvas behind the page.
+                // Disable that fill when supported so the native glass stays visible.
+                if configuration.responds(to: NSSelectorFromString("_setDrawsBackground:")) {
+                    configuration.setValue(false, forKey: "drawsBackground")
+                }
+                let view = WKWebView(frame: .zero, configuration: configuration)
+                view.underPageBackgroundColor = .clear
                 view.navigationDelegate = self
-                window.contentView = view
+                install(view)
                 view.load(URLRequest(url: server.config.origin))
             } catch is CancellationError {
                 return
@@ -49,7 +73,7 @@ final class TrackerLauncher: NSObject, NSApplicationDelegate, WKNavigationDelega
     }
 
     func applicationDidBecomeActive(_ notification: Notification) {
-        if refreshOnReturn, let view = window?.contentView as? WKWebView {
+        if refreshOnReturn, let view = content as? WKWebView {
             refreshOnReturn = false
             view.reload()
         }
@@ -100,7 +124,22 @@ final class TrackerLauncher: NSObject, NSApplicationDelegate, WKNavigationDelega
             content.centerYAnchor.constraint(equalTo: container.centerYAnchor),
             content.widthAnchor.constraint(lessThanOrEqualTo: container.widthAnchor, multiplier: 0.8),
         ])
-        window?.contentView = container
+        install(container)
+    }
+
+    private func install(_ view: NSView) {
+        guard let glass, let window else { return }
+        content?.removeFromSuperview()
+        glass.addSubview(view)
+        view.translatesAutoresizingMaskIntoConstraints = false
+        let top = (window.contentLayoutGuide as? NSLayoutGuide)?.topAnchor ?? glass.topAnchor
+        NSLayoutConstraint.activate([
+            view.topAnchor.constraint(equalTo: top),
+            view.leadingAnchor.constraint(equalTo: glass.leadingAnchor),
+            view.trailingAnchor.constraint(equalTo: glass.trailingAnchor),
+            view.bottomAnchor.constraint(equalTo: glass.bottomAnchor),
+        ])
+        content = view
     }
 
     func webView(

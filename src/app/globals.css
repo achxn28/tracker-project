@@ -208,6 +208,22 @@ body {
     radial-gradient(ellipse at 72% 74%, rgb(165 76 95 / 23%), transparent 43%),
     radial-gradient(ellipse at 12% 94%, rgb(28 126 123 / 35%), transparent 48%);
 }
+/* Give the native macOS backdrop room to show through the page. */
+.tracker-desktop body {
+  background-color: rgb(241 247 254 / 43%);
+  background-image: linear-gradient(145deg, rgb(181 222 250 / 18%), transparent 62%);
+}
+.tracker-desktop.dark body {
+  background-color: rgb(11 24 43 / 50%);
+  background-image: linear-gradient(145deg, rgb(52 94 146 / 20%), transparent 62%);
+}
+@media (prefers-reduced-transparency: reduce) {
+  .tracker-desktop body,
+  .tracker-desktop.dark body {
+    background-color: var(--background);
+  }
+}
+
 .tracker-sidebar {
   background: linear-gradient(150deg, var(--glass-highlight), transparent 70%), var(--glass);
   border-color: var(--glass-edge);
