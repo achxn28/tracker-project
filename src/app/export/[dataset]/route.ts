@@ -1,4 +1,4 @@
-import { withOpportunities } from "@/lib/opportunities";
+import { withTrackerStore } from "@/lib/tracker-store";
 import { toCsv } from "@/lib/csv";
 import { optionalFields } from "@/lib/opportunity-model";
 
@@ -7,9 +7,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ dat
   const { dataset } = await params;
   if (dataset !== "opportunities" && dataset !== "activities") return Response.json({ error: "Unknown export." }, { status: 404 });
   try {
-    const csv = withOpportunities(store => dataset === "opportunities"
-      ? toCsv(["id", "organization_name", "title", "type", "status", "priority", "work_arrangement", ...optionalFields, "closed_outcome", "archived_at", "created_at", "updated_at"], store.list())
-      : toCsv(["id", "opportunity_id", "activity_type", "occurred_at", "notes", "positive_response", "created_at"], store.allActivities()));
+    const csv = await withTrackerStore(async store => dataset === "opportunities"
+      ? toCsv(["id", "organization_name", "title", "type", "status", "priority", "work_arrangement", ...optionalFields, "closed_outcome", "archived_at", "created_at", "updated_at"], await store.list())
+      : toCsv(["id", "opportunity_id", "activity_type", "occurred_at", "notes", "positive_response", "created_at"], await store.allActivities()));
     return new Response(csv, { headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": `attachment; filename="${dataset}.csv"`, "Cache-Control": "no-store" } });
   } catch { return Response.json({ error: "The export could not be generated. Please try again." }, { status: 500 }); }
 }

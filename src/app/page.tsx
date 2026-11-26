@@ -4,7 +4,7 @@ import { calendarDeadlines } from "@/lib/dashboard-calendar";
 import { TrackerHeader } from "@/components/tracker-header";
 import { taskUrgency } from "@/lib/task-urgency";
 import { QueueControls } from "@/components/queue-controls";
-import { withOpportunities } from "@/lib/opportunities";
+import { withTrackerStore } from "@/lib/tracker-store";
 import { buildActionQueue, queueSections, todayInNewYork } from "@/lib/action-queue";
 import { displayDate } from "@/lib/opportunity-model";
 import { displayActivityTime } from "@/lib/activity-model";
@@ -12,10 +12,13 @@ import { goalWithProgress, metricProgress, type Metric } from "@/lib/goal-model"
 
 export const dynamic = "force-dynamic";
 
-export default function Home() {
+export default async function Home() {
   const now = new Date();
   const today = todayInNewYork(now);
-  const data = withOpportunities(store => ({ opportunities: store.list(), tasks: store.tasks(), activities: store.allActivities(), goals: store.goals() }));
+  const data = await withTrackerStore(async store => {
+    const [opportunities, tasks, activities, goals] = await Promise.all([store.list(), store.tasks(), store.allActivities(), store.goals()]);
+    return { opportunities, tasks, activities, goals };
+  });
   const activeGoals = data.goals.filter(goal => goal.status === "active").map(goal => goalWithProgress(goal, data, now));
   const queue = buildActionQueue(data.opportunities, data.tasks, data.activities, today);
   const names = new Map(data.opportunities.map(item => [item.id, item.organization_name]));

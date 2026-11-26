@@ -1,14 +1,14 @@
-import { withOpportunities } from "@/lib/opportunities";
+import { withTrackerStore } from "@/lib/tracker-store";
 import { goalWithProgress } from "@/lib/goal-model";
 import { todayInNewYork } from "@/lib/action-queue";
 import { Timeline } from "@/components/timeline";
 
 export const dynamic = "force-dynamic";
 
-export default function TimelinePage() {
-  const data = withOpportunities(store => {
-    const source = { tasks: store.tasks(), opportunities: store.list(), activities: store.allActivities() };
-    return { tasks: source.tasks, goals: store.goals().map(goal => goalWithProgress(goal, source)) };
+export default async function TimelinePage() {
+  const data = await withTrackerStore(async store => {
+    const [tasks, opportunities, activities, goals] = await Promise.all([store.tasks(), store.list(), store.allActivities(), store.goals()]);
+    return { tasks, goals: goals.map(goal => goalWithProgress(goal, { tasks, opportunities, activities })) };
   });
   return <Timeline tasks={data.tasks} goals={data.goals} today={todayInNewYork()} />;
 }
