@@ -85,7 +85,7 @@ const taskColumns = ["opportunity_id", "title", "description", "category", "prio
 const goalColumns = ["title", "metric_type", "target_count", "start_date", "end_date", "status"] as const;
 type Table = "opportunities" | "tasks" | "goals";
 
-export function postgresTrackerStore(pool: Pool): TrackerStore {
+export function postgresTrackerStore(pool: Pool) {
   async function addRow<K extends string>(table: Table, columns: readonly K[], data: Record<K, unknown>) {
     const id = randomUUID();
     const now = new Date().toISOString();
@@ -116,7 +116,7 @@ export function postgresTrackerStore(pool: Pool): TrackerStore {
       return (await pool.query<Opportunity>("SELECT * FROM tracker.opportunities ORDER BY created_at DESC, id DESC")).rows;
     },
     async get(id) {
-      return (await pool.query<Opportunity>("SELECT * FROM tracker.opportunities WHERE id = $1", [id])).rows[0];
+      return (await pool.query<Opportunity>("SELECT * FROM tracker.opportunities WHERE id = $1", [id])).rows.at(0);
     },
     create: data => addRow("opportunities", opportunityColumns, data),
     update: (id, data) => updateRow("opportunities", id, opportunityColumns, data),
@@ -133,7 +133,7 @@ export function postgresTrackerStore(pool: Pool): TrackerStore {
       return (await pool.query<Goal>("SELECT * FROM tracker.goals ORDER BY end_date, created_at, id")).rows;
     },
     async getGoal(id) {
-      return (await pool.query<Goal>("SELECT * FROM tracker.goals WHERE id = $1", [id])).rows[0];
+      return (await pool.query<Goal>("SELECT * FROM tracker.goals WHERE id = $1", [id])).rows.at(0);
     },
     createGoal: data => addRow("goals", goalColumns, data),
     updateGoal: (id, data) => updateRow("goals", id, goalColumns, data),
@@ -142,7 +142,7 @@ export function postgresTrackerStore(pool: Pool): TrackerStore {
       return (await pool.query<Task>("SELECT * FROM tracker.tasks ORDER BY due_date NULLS LAST, created_at DESC, id")).rows;
     },
     async getTask(id) {
-      return (await pool.query<Task>("SELECT * FROM tracker.tasks WHERE id = $1", [id])).rows[0];
+      return (await pool.query<Task>("SELECT * FROM tracker.tasks WHERE id = $1", [id])).rows.at(0);
     },
     createTask: data => addRow("tasks", taskColumns, data),
     updateTask: (id, data) => updateRow("tasks", id, taskColumns, data),
@@ -207,5 +207,5 @@ export function postgresTrackerStore(pool: Pool): TrackerStore {
         COUNT(DISTINCT CASE WHEN a.activity_type = 'Application submitted' AND o.type = 'Formal Internship' THEN o.id END) AS formal_applications
         FROM tracker.opportunities o JOIN tracker.activities a ON a.opportunity_id = o.id`)).rows[0]!;
     },
-  };
+  } satisfies TrackerStore;
 }
