@@ -11,7 +11,8 @@
     "start": "next start --hostname 127.0.0.1",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
-    "test": "node --conditions=react-server --test tests/*.test.ts"
+    "test": "node --conditions=react-server --test tests/*.test.ts",
+    "test:postgres": "node --conditions=react-server --test tests/integration/*.test.ts"
   },
   "dependencies": {
     "cn": "^0.5.2",
