@@ -12,13 +12,16 @@ final class TrackerLauncher: NSObject, NSApplicationDelegate, WKNavigationDelega
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         configureMenu()
+        let visibleFrame = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1366, height: 850)
+        let width = min(1040, visibleFrame.width * 0.80)
+        let height = min(680, visibleFrame.height * 0.78)
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 1180, height: 780),
+            contentRect: NSRect(x: 0, y: 0, width: width, height: height),
             styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered, defer: false
         )
         window.title = "Tracker"
-        window.minSize = NSSize(width: 640, height: 480)
+        window.minSize = NSSize(width: min(640, width), height: min(480, height))
         window.isReleasedWhenClosed = false
         window.center()
         self.window = window
