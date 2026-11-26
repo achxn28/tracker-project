@@ -44,6 +44,31 @@ recruiting metrics or copy into the opportunity database.
 Gmail tracking, AI integrations, scraping, and unrelated external APIs remain out
 of scope for the current MVP. The following proposal covers a possible next phase.
 
+## macOS launcher
+
+Ship a Dock launcher for this Mac first. Opening Tracker from Applications or
+the Dock should start the existing Next.js server from the local checkout and
+show the tracker in its own window. Keep the current glass UI, live Supabase
+connection, and four Novus Sheets CRMs. Use the existing ignored configuration
+and data files in the checkout. This version requires the checkout and its
+installed dependencies.
+
+The first implementation step is launch and shutdown. Have the launcher open
+the tracker only after its loopback server is ready. If the tracker is already
+running, reuse it only after verifying its identity. If another service owns
+the port, report the conflict. A second launch should focus the existing window.
+Quitting should stop only the server process the launcher started.
+
+Open Gmail and Sheets authorization in the default browser. Start the local
+OAuth route there so the browser that receives the callback also holds the
+state cookie. Verify window launch, relaunch, tracker data, all four CRM reads,
+and CSV exports before relying on the launcher.
+
+A self-contained Mac build can follow if the tracker needs to run independently
+of the checkout. That would bundle the server and move configuration and local
+data to a stable per-user folder outside the bundle. Vercel hosting is optional
+and separate from the launcher.
+
 ## Proposed cloud database and Gmail sync — November 24, 2026
 
 The optional Postgres backend, backup, import, and restore commands are
