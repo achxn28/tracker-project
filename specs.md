@@ -102,6 +102,15 @@ the four CRM workbooks as the source of truth for the Novus Clients page.
 
 ### 3. Add read-only Gmail sync as a separate integration
 
+The reply matcher is implemented and covered by synthetic fixtures. It uses
+header metadata and Gmail's stored timestamp, and skips sent messages, drafts,
+spam, trash, self replies, and messages marked as automated or from a mailing
+list. Reply headers are evidence for a candidate. A candidate needs review before
+it can change tracker records. Matching is limited to open, unarchived research
+opportunities. The matcher deduplicates candidates by mailbox and Gmail message
+ID using a batch plus any known source IDs supplied by the caller. OAuth,
+persistent deduplication, and the review UI remain future work.
+
 - Use a separate OAuth client and grant for `gmail.readonly`. It grants mailbox
   read access, so restrict what the worker fetches in code. Keep the Sheets grant
   local and give the worker only the Gmail grant and the database permissions it
