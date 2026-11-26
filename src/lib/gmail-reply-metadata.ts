@@ -44,6 +44,7 @@ function hasReplyReference(headers: Map<string, string[]>) {
   });
 }
 
+const replyHeaderNames = new Set(gmailReplyHeaders.map(header => header.toLowerCase()));
 const skippedLabels = new Set(["SENT", "DRAFT", "SPAM", "TRASH"]);
 
 export function parseGmailReplyMetadata(message: GmailMessageMetadata): GmailReplyMetadata | null {
@@ -55,6 +56,7 @@ export function parseGmailReplyMetadata(message: GmailMessageMetadata): GmailRep
   const headers = new Map<string, string[]>();
   for (const { name, value } of message.payload?.headers ?? []) {
     const key = name.toLowerCase();
+    if (!replyHeaderNames.has(key)) continue;
     const values = headers.get(key);
     if (values) values.push(value);
     else headers.set(key, [value]);
