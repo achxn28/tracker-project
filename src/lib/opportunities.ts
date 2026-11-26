@@ -4,7 +4,7 @@ import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { arrangements, opportunityTypes, optionalFields, outcomes, priorities, statuses, type Opportunity, type OpportunityInput } from "./opportunity-model.ts";
-import { activityTypes, pipelineAfterActivity, type Activity, type ActivityInput } from "./activity-model.ts";
+import { activityTypes, opportunityAfterActivity, type Activity, type ActivityInput } from "./activity-model.ts";
 import { taskCategories, type Task, type TaskInput } from "./task-model.ts";
 import { goalMetrics, type Goal, type GoalInput } from "./goal-model.ts";
 
@@ -187,20 +187,15 @@ export function openOpportunityStore(filename: string) {
       try {
         const opportunity = db.prepare("SELECT * FROM opportunities WHERE id = ?").get(id) as Opportunity | undefined;
         if (!opportunity) throw new Error("Opportunity not found");
-        if (data.follow_up_date && opportunity.status === "Closed") throw new Error("Reopen the opportunity before scheduling a follow-up");
         const latest = db.prepare("SELECT MAX(occurred_at) AS time FROM activities WHERE opportunity_id = ? AND activity_type NOT IN ('General note', 'Follow-up email sent')").get(id)?.time as string | null;
-        const stage = !latest || data.occurred_at >= latest ? pipelineAfterActivity(opportunity, data.activity_type)
-          : { status: opportunity.status, closed_outcome: opportunity.closed_outcome };
+        const lastEmail = db.prepare("SELECT MAX(occurred_at) AS time FROM activities WHERE opportunity_id = ? AND activity_type IN ('Initial email sent', 'Follow-up email sent')").get(id)?.time as string | null;
+        const changes = opportunityAfterActivity(opportunity, data, latest, lastEmail);
         const timestamp = new Date().toISOString();
         const activityId = randomUUID();
-        const lastEmail = db.prepare("SELECT MAX(occurred_at) AS time FROM activities WHERE opportunity_id = ? AND activity_type IN ('Initial email sent', 'Follow-up email sent')").get(id)?.time as string | null;
-        const resolvesFollowUp = opportunity.next_action === "Send follow-up email" &&
-          ["Follow-up email sent", "Reply received", "Meeting scheduled", "Meeting completed", "Interview completed", "Offer received", "Offer accepted", "Rejection received"].includes(data.activity_type) && (!lastEmail || data.occurred_at >= lastEmail);
         db.prepare("INSERT INTO activities (id, opportunity_id, activity_type, occurred_at, notes, positive_response, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)")
           .run(activityId, id, data.activity_type, data.occurred_at, data.notes, data.activity_type === "Reply received" && data.positive_response ? 1 : 0, timestamp);
         db.prepare("UPDATE opportunities SET status = ?, closed_outcome = ?, next_action = ?, next_action_date = ?, updated_at = ? WHERE id = ?")
-          .run(stage.status, stage.closed_outcome, data.follow_up_date ? "Send follow-up email" : resolvesFollowUp ? null : opportunity.next_action,
-            data.follow_up_date ?? (resolvesFollowUp ? null : opportunity.next_action_date), timestamp, id);
+          .run(changes.status, changes.closed_outcome, changes.next_action, changes.next_action_date, timestamp, id);
         db.exec("COMMIT");
         return activityId;
       } catch (error) { db.exec("ROLLBACK"); throw error; }

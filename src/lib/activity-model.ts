@@ -86,3 +86,18 @@ export function pipelineAfterActivity(opportunity: Opportunity, type: ActivityTy
   return target && progression.indexOf(target) > progression.indexOf(opportunity.status)
     ? { status: target, closed_outcome: null } : current;
 }
+
+export function opportunityAfterActivity(opportunity: Opportunity, data: ActivityInput, latest: string | null, lastEmail: string | null) {
+  if (data.follow_up_date && opportunity.status === "Closed") throw new Error("Reopen the opportunity before scheduling a follow-up");
+  const stage = !latest || data.occurred_at >= latest
+    ? pipelineAfterActivity(opportunity, data.activity_type)
+    : { status: opportunity.status, closed_outcome: opportunity.closed_outcome };
+  const resolvesFollowUp = opportunity.next_action === "Send follow-up email" &&
+    ["Follow-up email sent", "Reply received", "Meeting scheduled", "Meeting completed", "Interview completed", "Offer received", "Offer accepted", "Rejection received"].includes(data.activity_type) &&
+    (!lastEmail || data.occurred_at >= lastEmail);
+  return {
+    ...stage,
+    next_action: data.follow_up_date ? "Send follow-up email" : resolvesFollowUp ? null : opportunity.next_action,
+    next_action_date: data.follow_up_date ?? (resolvesFollowUp ? null : opportunity.next_action_date),
+  };
+}
