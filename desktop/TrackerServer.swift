@@ -1,4 +1,4 @@
-import AppKit
+import Darwin
 import Foundation
 
 struct LauncherConfig {
@@ -50,8 +50,14 @@ final class TrackerServer {
         var address: String
     }
 
+    private struct AdoptedServer {
+        var listener: Listener
+        var startedAt: String
+    }
+
     let config: LauncherConfig
     private var ownedProcess: Process?
+    private var adoptedServer: AdoptedServer?
     private let http: URLSession
 
     init(config: LauncherConfig) {
@@ -66,13 +72,16 @@ final class TrackerServer {
     func start() async throws {
         let listeners = try listening()
         let expectedPID: Int32
+        var serverToAdopt: AdoptedServer?
         if listeners.isEmpty {
             expectedPID = try startServerProcess()
         } else {
             guard listeners.count == 1, let listener = listeners.first,
-                  listener.address == "127.0.0.1:\(config.port)", try belongsToTracker(listener.pid)
+                  listener.address == "127.0.0.1:\(config.port)",
+                  let startedAt = try trackerProcessStart(listener.pid)
             else { throw LauncherError.portInUse(config.port) }
             expectedPID = listener.pid
+            serverToAdopt = AdoptedServer(listener: listener, startedAt: startedAt)
         }
 
         let deadline = ContinuousClock.now.advanced(by: .seconds(20))
@@ -80,7 +89,14 @@ final class TrackerServer {
             try Task.checkCancellation()
             if ownedProcess?.isRunning == false { throw LauncherError.serverExited }
             let expected = [Listener(pid: expectedPID, address: "127.0.0.1:\(config.port)")]
-            if try listening() == expected, await answersHTTP(), try listening() == expected { return }
+            if try listening() == expected, await answersHTTP(), try listening() == expected {
+                if let serverToAdopt {
+                    guard try trackerProcessStart(expectedPID) == serverToAdopt.startedAt
+                    else { throw LauncherError.portInUse(config.port) }
+                    adoptedServer = serverToAdopt
+                }
+                return
+            }
             try await Task.sleep(for: .milliseconds(250))
         }
         throw LauncherError.notReady
@@ -89,6 +105,14 @@ final class TrackerServer {
     func stop() {
         if let process = ownedProcess, process.isRunning { process.terminate() }
         ownedProcess = nil
+        // Re-check before signalling. The original listener may have exited or
+        // been replaced since launch, and the OS can reuse its process ID.
+        if let server = adoptedServer,
+           (try? listening()) == [server.listener],
+           (try? trackerProcessStart(server.listener.pid)) == server.startedAt {
+            kill(server.listener.pid, SIGTERM)
+        }
+        adoptedServer = nil
     }
 
     private func startServerProcess() throws -> Int32 {
@@ -138,14 +162,17 @@ final class TrackerServer {
         return found
     }
 
-    private func belongsToTracker(_ pid: Int32) throws -> Bool {
+    private func trackerProcessStart(_ pid: Int32) throws -> String? {
         let command = try run("/bin/ps", ["-p", String(pid), "-o", "command="])
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        guard command.hasPrefix("next-server (v"), command.hasSuffix(")") else { return false }
+        guard command.hasPrefix("next-server (v"), command.hasSuffix(")") else { return nil }
         let cwd = try run("/usr/sbin/lsof", ["-a", "-p", String(pid), "-d", "cwd", "-Fn"])
-        guard let path = cwd.split(separator: "\n").first(where: { $0.first == "n" }) else { return false }
-        return URL(fileURLWithPath: String(path.dropFirst()), isDirectory: true)
-            .resolvingSymlinksInPath().path == config.workspace.path
+        guard let path = cwd.split(separator: "\n").first(where: { $0.first == "n" }),
+              URL(fileURLWithPath: String(path.dropFirst()), isDirectory: true)
+                .resolvingSymlinksInPath().path == config.workspace.path else { return nil }
+        let startedAt = try run("/bin/ps", ["-p", String(pid), "-o", "lstart="])
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return startedAt.isEmpty ? nil : startedAt
     }
 
     private func run(_ executable: String, _ arguments: [String]) throws -> String {

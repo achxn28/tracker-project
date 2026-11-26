@@ -57,7 +57,8 @@ The first implementation step is launch and shutdown. Have the launcher open
 the tracker only after its loopback server is ready. If the tracker is already
 running, reuse it only after verifying its identity. If another service owns
 the port, report the conflict. A second launch should focus the existing window.
-Quitting should stop only the server process the launcher started.
+Quitting should stop the server the launcher started or adopted after verifying
+its identity. Leave unrelated listeners and replacement processes alone.
 
 Open Gmail and Sheets authorization in the default browser. Start the local
 OAuth route there so the browser that receives the callback also holds the
