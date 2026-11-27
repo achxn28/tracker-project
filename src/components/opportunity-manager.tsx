@@ -66,7 +66,10 @@ export function OpportunityManager({ initialOpportunities, initialTasks, initial
       {(selected || editing) && <button className="mb-5 text-sm text-muted-foreground underline-offset-4 hover:underline" onClick={showList} disabled={pending}>{research ? "All research contacts" : "All opportunities"}</button>}
       <div className="mb-7 flex flex-wrap items-start justify-between gap-5">
         <div className="min-w-0"><h1 className="break-words text-3xl font-semibold tracking-tight">{title}</h1><p className="mt-2 break-words text-muted-foreground">{editing ? "Start with the essentials. Add more details as you research." : selected ? (research ? `${selected.organization_name} · ${selected.title}` : selected.title) : research ? "Plan professor cold emails, track replies, and stay on top of follow-ups." : "Keep your research contacts, startups, and applications in one place."}</p></div>
-        {!editing && <button className="tracker-button tracker-primary" onClick={() => edit(selected)}>{selected ? (research ? "Edit professor" : "Edit opportunity") : addLabel}</button>}
+        {!editing && <div className="flex flex-wrap gap-2">
+          {research && !selected && <Link className="tracker-button" href="/research/gmail">Gmail review</Link>}
+          <button className="tracker-button tracker-primary" onClick={() => edit(selected)}>{selected ? (research ? "Edit professor" : "Edit opportunity") : addLabel}</button>
+        </div>}
       </div>
       {message && <p role="alert" className="mb-5 text-sm text-destructive">{message}</p>}
       {!editing && !selected && <div className="tracker-panel mb-6 space-y-4 p-5"><label className="block text-sm font-medium">{research ? "Search research contacts" : "Search opportunities"}<input className="tracker-input mt-2" type="search" value={filters.search} placeholder={research ? "Professor, university, lab, or research focus" : "Organization, contact, title, or focus"} onChange={event => filter("search", event.target.value)} /></label><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

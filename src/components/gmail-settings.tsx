@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { disconnectGmail } from "@/app/settings/gmail-actions";
 import { gmailConfig, gmailConnection } from "@/lib/gmail-connection";
 
@@ -29,12 +30,13 @@ export function GmailSettings({ notice }: { notice?: string }) {
   return <section className="tracker-panel space-y-4 p-6">
     <div>
       <h2 className="text-lg font-semibold">Gmail</h2>
-      <p className="mt-2 text-sm text-muted-foreground">Connect Gmail with read access for Research outreach. The tracker verifies your mailbox when you connect. Email sync is not active yet.</p>
+      <p className="mt-2 text-sm text-muted-foreground">Connect Gmail with read access for Research outreach. Check replies manually from Research outreach after connecting.</p>
     </div>
     {state.mailbox && <p className="break-words text-sm">Connected as {state.mailbox.email}</p>}
     {message && <p role="status" className="text-sm">{message}</p>}
     {state.canConnect && <div className="flex flex-wrap gap-3">
       <a className="tracker-button" href="/api/gmail/connect">{state.mailbox ? "Reconnect Gmail" : "Connect Gmail"}</a>
+      {state.mailbox && <Link href="/research/gmail" className="tracker-button">Gmail review</Link>}
       {state.mailbox && <form action={disconnectGmail}><button type="submit" className="tracker-button">Disconnect Gmail</button></form>}
     </div>}
   </section>;
