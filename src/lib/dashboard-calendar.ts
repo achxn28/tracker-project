@@ -1,3 +1,4 @@
+import { collegeHref, type College } from "./admissions-model.ts";
 import { addCalendarDays } from "./action-queue.ts";
 import type { Task } from "./task-model.ts";
 import type { Opportunity } from "./opportunity-model.ts";
@@ -5,7 +6,7 @@ import type { Activity } from "./activity-model.ts";
 import { sameActionTitle } from "./task-model.ts";
 import type { GoalView } from "./goal-model.ts";
 
-export type CalendarDeadline = { id: string; kind: "task" | "goal" | "application" | "follow_up" | "next_action"; title: string; date: string; href: string; context?: string };
+export type CalendarDeadline = { id: string; kind: "task" | "goal" | "application" | "college" | "follow_up" | "next_action"; title: string; date: string; href: string; context?: string };
 export function calendarMonth(anchor: string) {
   const first = `${anchor.slice(0, 7)}-01`;
   const date = new Date(`${first}T12:00:00Z`);
@@ -25,9 +26,14 @@ export function calendarDeadlines(
   goals: Pick<GoalView, "id" | "title" | "end_date" | "status" | "completed">[],
   opportunities: Opportunity[] = [],
   activities: Pick<Activity, "opportunity_id" | "activity_type">[] = [],
+  colleges: College[] = [],
 ): CalendarDeadline[] {
   const pendingTasks = tasks.filter(task => task.due_date && !task.completed_at);
   const items: CalendarDeadline[] = [
+    ...colleges.flatMap((college): CalendarDeadline[] => college.deadline ? [{
+      id: college.id, kind: "college", title: college.name, date: college.deadline,
+      href: collegeHref(college.id), context: [college.round, college.submitted && "Submitted"].filter(Boolean).join(" · "),
+    }] : []),
     ...pendingTasks.map(task => ({ id: task.id, kind: "task" as const, title: task.title, date: task.due_date!, href: `/tasks?task=${task.id}#task-${task.id}` })),
     ...goals.filter(goal => goal.status === "active" && !goal.completed).map(goal => ({ id: goal.id, kind: "goal" as const, title: goal.title, date: goal.end_date, href: `/goals?goal=${goal.id}#goal-${goal.id}` })),
   ];

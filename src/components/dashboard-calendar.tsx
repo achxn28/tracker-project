@@ -5,7 +5,7 @@ import { useState } from "react";
 import { calendarMonth, shiftCalendarMonth, type CalendarDeadline } from "@/lib/dashboard-calendar";
 import { taskUrgency } from "@/lib/task-urgency";
 
-const eventLabels: Record<CalendarDeadline["kind"], string> = { task: "Task", goal: "Goal deadline", application: "Application deadline", follow_up: "Planned follow-up", next_action: "Planned next action" };
+const eventLabels: Record<CalendarDeadline["kind"], string> = { task: "Task", goal: "Goal deadline", college: "College application deadline", application: "Application deadline", follow_up: "Planned follow-up", next_action: "Planned next action" };
 
 const formatDate = (date: string, options: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat("en-US", { ...options, timeZone: "UTC" }).format(new Date(`${date}T12:00:00Z`));
 
