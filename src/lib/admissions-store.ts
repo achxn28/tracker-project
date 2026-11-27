@@ -3,6 +3,7 @@ import { mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import type { AdmissionsData, College, Supplement } from "./admissions-model.ts";
+import type { AdmissionsGoal } from "./goal-model.ts";
 
 const directory = () => process.env.TRACKER_ADMISSIONS_DIR || join(process.cwd(), "data", "admissions");
 
@@ -20,6 +21,11 @@ function withAdmissionsDatabase<T>(operation: (db: DatabaseSync) => T): T {
         id TEXT PRIMARY KEY, collegeId TEXT NOT NULL REFERENCES colleges(id),
         title TEXT NOT NULL, prompt TEXT, wordLimit INTEGER, dueDate TEXT, status TEXT NOT NULL
           CHECK (status IN ('To write', 'Drafting', 'Ready for review', 'Done')), docsUrl TEXT
+      ) STRICT;
+      CREATE TABLE IF NOT EXISTS admissions_goal (
+        singleton INTEGER PRIMARY KEY CHECK (singleton = 1), title TEXT NOT NULL,
+        start_date TEXT NOT NULL, end_date TEXT NOT NULL, status TEXT NOT NULL CHECK (status IN ('active', 'paused')),
+        CHECK (start_date <= end_date)
       ) STRICT;
     `);
     return operation(db);
@@ -58,6 +64,25 @@ export function saveSupplement(supplement: Supplement) {
 
 export function completeSupplement(id: string) {
   return withAdmissionsDatabase(db => db.prepare("UPDATE supplements SET status = 'Done' WHERE id = ?").run(id).changes > 0);
+}
+
+export function readAdmissionsGoal(): AdmissionsGoal | null {
+  return withAdmissionsDatabase(db => {
+    const row = db.prepare("SELECT title, start_date, end_date, status FROM admissions_goal").get();
+    return row ? { ...row } as AdmissionsGoal : null;
+  });
+}
+
+export function saveAdmissionsGoal(goal: AdmissionsGoal) {
+  withAdmissionsDatabase(db => db.prepare(`
+    INSERT INTO admissions_goal VALUES (1, ?, ?, ?, ?)
+    ON CONFLICT(singleton) DO UPDATE SET title=excluded.title, start_date=excluded.start_date,
+      end_date=excluded.end_date, status=excluded.status
+  `).run(goal.title, goal.start_date, goal.end_date, goal.status));
+}
+
+export function deleteAdmissionsGoal() {
+  withAdmissionsDatabase(db => db.prepare("DELETE FROM admissions_goal WHERE singleton = 1").run());
 }
 
 export function readAdmissionsPreview(): AdmissionsData | null {

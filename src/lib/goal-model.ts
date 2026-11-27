@@ -1,3 +1,4 @@
+import type { Supplement } from "./admissions-model.ts";
 import type { Opportunity } from "./opportunity-model.ts";
 import type { Activity } from "./activity-model.ts";
 import { newYorkInput } from "./activity-model.ts";
@@ -15,29 +16,57 @@ export const goalMetrics = {
   tasks_completed: "Tasks completed",
 } as const;
 export type Metric = keyof typeof goalMetrics;
-export type GoalInput = { title: string; metric_type: Metric; target_count: number; start_date: string; end_date: string; status: "active" | "paused" };
+type GoalSchedule = { title: string; start_date: string; end_date: string; status: "active" | "paused" };
+export type GoalInput = GoalSchedule & { metric_type: Metric; target_count: number };
 export type Goal = GoalInput & { id: string; created_at: string; updated_at: string };
-export type GoalView = Goal & { current: number; percentage: number; completed: boolean };
+export type GoalView = GoalSchedule & {
+  id: string; metric_type: Metric | "all_supplements"; target_count: number;
+  current: number; percentage: number; completed: boolean;
+};
+export type AdmissionsGoal = GoalSchedule;
+export const admissionsGoalId = "admissions-supplements";
+export const admissionsGoalLabel = "All tracked supplements";
 export type MetricData = { opportunities: Opportunity[]; activities: Activity[]; tasks: Task[] };
 
-export function parseGoal(raw: Record<string, unknown>): { data: GoalInput; errors?: never } | { data?: never; errors: Record<string, string> } {
-  const text = (key: string) => typeof raw[key] === "string" ? raw[key].trim() : "";
+type Parsed<T> = { data: T; errors?: never } | { data?: never; errors: Record<string, string> };
+
+function goalText(raw: Record<string, unknown>, key: string) {
+  return typeof raw[key] === "string" ? raw[key].trim() : "";
+}
+
+export function parseGoalSchedule(raw: Record<string, unknown>): Parsed<GoalSchedule> {
   const errors: Record<string, string> = {};
-  const title = text("title");
-  const metric_type = text("metric_type") as Metric;
-  const target_count = Number(text("target_count"));
-  const start_date = text("start_date"), end_date = text("end_date");
-  const status = text("status") as GoalInput["status"];
+  const title = goalText(raw, "title");
+  const start_date = goalText(raw, "start_date"), end_date = goalText(raw, "end_date");
+  const status = goalText(raw, "status") as GoalSchedule["status"];
   if (!title) errors.title = "Enter a goal title.";
-  if (!Object.hasOwn(goalMetrics, metric_type)) errors.metric_type = "Choose a valid metric.";
-  if (!Number.isSafeInteger(target_count) || target_count < 1) errors.target_count = "Enter a positive whole-number target.";
   if (!["active", "paused"].includes(status)) errors.status = "Choose Active or Paused.";
   for (const [key, value] of [["start_date", start_date], ["end_date", end_date]]) {
     const date = new Date(`${value}T12:00:00Z`);
     if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || !Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== value) errors[key] = "Enter a valid calendar date.";
   }
   if (start_date > end_date) errors.end_date = "The deadline must be on or after the start date.";
-  return Object.keys(errors).length ? { errors } : { data: { title, metric_type, target_count, start_date, end_date, status } };
+  return Object.keys(errors).length ? { errors } : { data: { title, start_date, end_date, status } };
+}
+
+export function parseGoal(raw: Record<string, unknown>): Parsed<GoalInput> {
+  const schedule = parseGoalSchedule(raw);
+  const errors = schedule.errors ?? {};
+  const metric_type = goalText(raw, "metric_type") as Metric;
+  const target_count = Number(goalText(raw, "target_count"));
+  if (!Object.hasOwn(goalMetrics, metric_type)) errors.metric_type = "Choose a valid metric.";
+  if (!Number.isSafeInteger(target_count) || target_count < 1) errors.target_count = "Enter a positive whole-number target.";
+  return schedule.data && !Object.keys(errors).length ? { data: { ...schedule.data, metric_type, target_count } } : { errors };
+}
+
+export function admissionsGoalWithProgress(goal: AdmissionsGoal, supplements: Supplement[]): GoalView {
+  const current = supplements.filter(essay => essay.status === "Done").length;
+  const target_count = supplements.length;
+  return {
+    ...goal, id: admissionsGoalId, metric_type: "all_supplements", current, target_count,
+    percentage: target_count ? current / target_count * 100 : 0,
+    completed: target_count > 0 && current === target_count,
+  };
 }
 
 // Each opportunity reaches a metric's milestone once. Its earliest qualifying
