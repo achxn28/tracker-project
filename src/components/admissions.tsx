@@ -1,7 +1,9 @@
 "use client";
 
+import { ChevronDown, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useState, useTransition, type FormEvent, type ReactNode } from "react";
+import { flushSync } from "react-dom";
 import { confirmAdmissionsImport, saveApplication, saveEssay } from "@/app/admissions/actions";
 import { collegeHref, supplementStatuses, ucCampusIds, type AdmissionsData, type College, type Supplement, type SupplementStatus } from "@/lib/admissions-model";
 import { displayDate } from "@/lib/opportunity-model";
@@ -70,6 +72,16 @@ function importSummary(preview: AdmissionsData, data: AdmissionsData) {
 export function Admissions({ data, preview, selectedCollege }: { data: AdmissionsData; preview: AdmissionsData | null; selectedCollege?: string }) {
   const [status, setStatus] = useState<SupplementStatus | "All">("All");
   const [school, setSchool] = useState(selectedCollege ?? "");
+  const [collapsedSchools, setCollapsedSchools] = useState<ReadonlySet<string>>(() => new Set());
+
+  function setSchoolCollapsed(id: string, collapsed: boolean) {
+    setCollapsedSchools(current => {
+      const next = new Set(current);
+      if (collapsed) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  }
   const visible = school ? data.colleges.filter(item => item.id === school || item.id === "uc-piqs" && ucCampusIds.includes(school)) : data.colleges;
   const essays = data.supplements.filter(item => visible.some(college => college.id === item.collegeId));
 
@@ -105,7 +117,9 @@ export function Admissions({ data, preview, selectedCollege }: { data: Admission
       <h2 className="font-semibold">{status} by writing deadline</h2>
       <ul className="space-y-2 text-sm">
         {essays.filter(essay => essay.status === status).map(essay => <li key={essay.id}>
-          <a className="text-primary underline-offset-4 hover:underline" href={`#supplement-${essay.id}`}>{visible.find(college => college.id === essay.collegeId)?.name} · {essay.title}</a>
+          <a className="text-primary underline-offset-4 hover:underline" href={`#supplement-${essay.id}`} onClick={() => {
+            if (collapsedSchools.has(essay.collegeId)) flushSync(() => setSchoolCollapsed(essay.collegeId, false));
+          }}>{visible.find(college => college.id === essay.collegeId)?.name} · {essay.title}</a>
           <span className="ml-2 text-muted-foreground">{essay.dueDate ? displayDate(essay.dueDate) : "Unscheduled"}</span>
         </li>)}
         {!essays.some(essay => essay.status === status) && <li className="text-muted-foreground">No essays in this status.</li>}
@@ -121,40 +135,61 @@ export function Admissions({ data, preview, selectedCollege }: { data: Admission
       const all = essays.filter(essay => essay.collegeId === college.id);
       const items = status === "All" ? all : all.filter(essay => essay.status === status);
       if (status !== "All" && !items.length) return null;
-      return <section className="tracker-panel scroll-mt-5 divide-y overflow-hidden" key={college.id} id={`college-${college.id}`}>
-        <header className="space-y-2 p-5">
-          <h2 className="text-xl font-semibold">{college.name}</h2>
-          <p className="text-sm text-muted-foreground">{[college.round, college.deadline ? `Application due ${displayDate(college.deadline)}` : college.id !== "uc-piqs" && "Application date missing", college.submitted && "Submitted", `${all.filter(essay => essay.status === "Done").length}/${all.length} done`].filter(Boolean).join(" · ")}</p>
-          {college.supplementsUnknown && <p className="text-sm text-muted-foreground">Verify supplement requirements</p>}
-          {ucCampusIds.includes(college.id) && <Link href={collegeHref("uc-piqs")} className="text-sm text-primary underline-offset-4 hover:underline">Shared UC PIQs</Link>}
-          <div className="flex flex-wrap items-start gap-4">
-            {college.docsUrl && <a href={college.docsUrl} target="_blank" rel="noreferrer" className="text-sm text-primary underline-offset-4 hover:underline">Open school Docs tab</a>}
-            <details className="min-w-0 flex-1 space-y-3">
-              <summary className="cursor-pointer text-sm">Edit school</summary>
-              <Editor save={saveApplication.bind(null, college.id)} button="Save school"><SchoolFields college={college} /></Editor>
-            </details>
-          </div>
-        </header>
+      const writing = ucCampusIds.includes(college.id)
+        ? [...all, ...data.supplements.filter(essay => essay.collegeId === "uc-piqs")]
+        : all;
+      const canCollapse = college.submitted || writing.length > 0 && writing.every(essay => essay.status === "Done");
+      const collapsed = canCollapse && collapsedSchools.has(college.id);
+      const detailsId = `college-details-${college.id}`;
+      const Chevron = collapsed ? ChevronRight : ChevronDown;
 
-        {items.map(essay => <article key={essay.id} id={`supplement-${essay.id}`} className="scroll-mt-5 space-y-2 p-5 target:bg-primary/10">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h3 className="font-medium">{essay.title}</h3>
-            <span className="tracker-badge">{essay.status}</span>
-          </div>
-          <p className="text-sm text-muted-foreground">{[essay.dueDate ? `Writing due ${displayDate(essay.dueDate)}` : "No writing deadline", essay.wordLimit && `${essay.wordLimit} words max`, !essay.prompt && "Prompt missing"].filter(Boolean).join(" · ")}</p>
-          {essay.prompt && <details className="space-y-2 text-sm"><summary className="cursor-pointer">Read prompt</summary><p className="whitespace-pre-wrap">{essay.prompt}</p></details>}
-          <div className="flex flex-wrap items-start gap-4">
-            {(essay.docsUrl || college.docsUrl) && <a href={essay.docsUrl ?? college.docsUrl!} target="_blank" rel="noreferrer" className="text-sm text-primary underline-offset-4 hover:underline">Open in Docs</a>}
-            <details className="min-w-0 flex-1 space-y-3">
-              <summary className="cursor-pointer text-sm">Edit supplement</summary>
-              <Editor save={saveEssay.bind(null, essay.id, college.id)} button="Save supplement"><EssayFields essay={essay} /></Editor>
-            </details>
-          </div>
-        </article>)}
-        <details className="space-y-3 p-5">
-          <summary className="cursor-pointer text-sm font-medium">Add supplement</summary>
-          <Editor save={saveEssay.bind(null, null, college.id)} reset button="Add supplement"><EssayFields /></Editor>
-        </details>
+      return <section className="tracker-panel scroll-mt-5 overflow-hidden" key={college.id} id={`college-${college.id}`}>
+        <h2 className="text-xl font-semibold">
+          {canCollapse ? <button
+            type="button"
+            className="flex w-full items-center justify-between gap-3 px-5 pt-4 pb-4 text-left hover:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-2"
+            aria-expanded={!collapsed}
+            aria-controls={detailsId}
+            onClick={() => setSchoolCollapsed(college.id, !collapsed)}
+          >
+            <span>{college.name}</span>
+            <Chevron aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
+          </button> : <span className="block px-5 pt-5">{college.name}</span>}
+        </h2>
+        <div id={detailsId} hidden={collapsed} className="divide-y">
+          <header className="space-y-2 px-5 pt-2 pb-5">
+            <p className="text-sm text-muted-foreground">{[college.round, college.deadline ? `Application due ${displayDate(college.deadline)}` : college.id !== "uc-piqs" && "Application date missing", college.submitted && "Submitted", `${all.filter(essay => essay.status === "Done").length}/${all.length} done`].filter(Boolean).join(" · ")}</p>
+            {college.supplementsUnknown && <p className="text-sm text-muted-foreground">Verify supplement requirements</p>}
+            {ucCampusIds.includes(college.id) && <Link href={collegeHref("uc-piqs")} className="text-sm text-primary underline-offset-4 hover:underline">Shared UC PIQs</Link>}
+            <div className="flex flex-wrap items-start gap-4">
+              {college.docsUrl && <a href={college.docsUrl} target="_blank" rel="noreferrer" className="text-sm text-primary underline-offset-4 hover:underline">Open school Docs tab</a>}
+              <details className="min-w-0 flex-1 space-y-3">
+                <summary className="cursor-pointer text-sm">Edit school</summary>
+                <Editor save={saveApplication.bind(null, college.id)} button="Save school"><SchoolFields college={college} /></Editor>
+              </details>
+            </div>
+          </header>
+
+          {items.map(essay => <article key={essay.id} id={`supplement-${essay.id}`} className="scroll-mt-5 space-y-2 p-5 target:bg-primary/10">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h3 className="font-medium">{essay.title}</h3>
+              <span className="tracker-badge">{essay.status}</span>
+            </div>
+            <p className="text-sm text-muted-foreground">{[essay.dueDate ? `Writing due ${displayDate(essay.dueDate)}` : "No writing deadline", essay.wordLimit && `${essay.wordLimit} words max`, !essay.prompt && "Prompt missing"].filter(Boolean).join(" · ")}</p>
+            {essay.prompt && <details className="space-y-2 text-sm"><summary className="cursor-pointer">Read prompt</summary><p className="whitespace-pre-wrap">{essay.prompt}</p></details>}
+            <div className="flex flex-wrap items-start gap-4">
+              {(essay.docsUrl || college.docsUrl) && <a href={essay.docsUrl ?? college.docsUrl!} target="_blank" rel="noreferrer" className="text-sm text-primary underline-offset-4 hover:underline">Open in Docs</a>}
+              <details className="min-w-0 flex-1 space-y-3">
+                <summary className="cursor-pointer text-sm">Edit supplement</summary>
+                <Editor save={saveEssay.bind(null, essay.id, college.id)} button="Save supplement"><EssayFields essay={essay} /></Editor>
+              </details>
+            </div>
+          </article>)}
+          <details className="space-y-3 p-5">
+            <summary className="cursor-pointer text-sm font-medium">Add supplement</summary>
+            <Editor save={saveEssay.bind(null, null, college.id)} reset button="Add supplement"><EssayFields /></Editor>
+          </details>
+        </div>
       </section>;
     })}
   </>;
