@@ -24,8 +24,10 @@ export type Supplement = {
 
 export type AdmissionsData = { colleges: College[]; supplements: Supplement[] };
 
+export const ucCampusIds = ["uc-berkeley", "ucla", "ucsd"];
+
 export const collegeHref = (id: string) => `/admissions?college=${encodeURIComponent(id)}#college-${encodeURIComponent(id)}`;
-export const supplementHref = (id: string) => `/admissions#supplement-${encodeURIComponent(id)}`;
+export const supplementHref = (essay: Supplement) => `/admissions?college=${encodeURIComponent(essay.collegeId)}#supplement-${encodeURIComponent(essay.id)}`;
 
 export function validDocsUrl(url: string) {
   return /^https:\/\/docs\.google\.com\/document\/d\/[\w-]+(?:\/edit)?(?:\?tab=[\w.-]+)?$/.test(url);
