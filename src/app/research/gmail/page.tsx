@@ -54,6 +54,7 @@ export default async function GmailReviewPage() {
         <Link href="/research" className="text-sm text-primary underline-offset-4 hover:underline">Research outreach</Link>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight">Gmail review</h1>
         <p className="mt-2 text-muted-foreground">Check replies from the last {gmailScanDays} days for saved research contacts and linked conversations.</p>
+        <Link href="/research/gmail/suggestions" className="tracker-button mt-4">Try task suggestions</Link>
       </header>
 
       {!data ? <section className="tracker-panel space-y-3 p-5">

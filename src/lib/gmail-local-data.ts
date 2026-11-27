@@ -10,14 +10,14 @@ function derivedKey(key: Buffer, purpose: string) {
   return Buffer.from(hkdfSync("sha256", key, "", `tracker:gmail:${purpose}:v1`, 32));
 }
 
-export function encryptGmailData(key: Buffer, purpose: "oauth" | "candidate", value: string): Buffer {
+export function encryptGmailData(key: Buffer, purpose: "oauth" | "candidate" | "task-draft", value: string): Buffer {
   const nonce = randomBytes(nonceLength);
   const cipher = createCipheriv("aes-256-gcm", derivedKey(key, purpose), nonce);
   const ciphertext = Buffer.concat([cipher.update(value, "utf8"), cipher.final()]);
   return Buffer.concat([Buffer.from([version]), nonce, cipher.getAuthTag(), ciphertext]);
 }
 
-export function decryptGmailData(key: Buffer, purpose: "oauth" | "candidate", value: Uint8Array): string {
+export function decryptGmailData(key: Buffer, purpose: "oauth" | "candidate" | "task-draft", value: Uint8Array): string {
   if (value.length <= prefixLength || value[0] !== version) throw new Error("Invalid Gmail data.");
   const decipher = createDecipheriv("aes-256-gcm", derivedKey(key, purpose), value.subarray(1, 1 + nonceLength));
   decipher.setAuthTag(value.subarray(1 + nonceLength, prefixLength));

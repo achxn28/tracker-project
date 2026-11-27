@@ -27,6 +27,19 @@ account was authorized. Mailbox checks run on demand in Tracker on your Mac.
 5. Restart the tracker and open **Settings → Gmail → Connect Gmail**. Sign in
    as the mailbox you intend to use and review Google's read access prompt.
 
+## Try local task suggestions
+
+Open **Research outreach → Gmail review → Try task suggestions**. Choose a
+sample email and click **Suggest task**. Review the quote, edit the proposed
+title or date, and approve or dismiss the suggestion. An approved sample is a
+regular task labeled as sample data in its description. Reapproving a sample
+keeps its first saved task.
+
+The pilot uses Ollama and the local `qwen3:4b` model. Install Ollama and download
+that model once. Tracker starts a private loopback Ollama server for each
+request with cloud features disabled, then stops it. The pilot uses built-in
+sample text and the workspace's existing local encryption key.
+
 ## Check and review replies
 
 Open **Research outreach → Gmail review → Check Gmail** to look back up to 30
