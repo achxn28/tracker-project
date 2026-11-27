@@ -1,4 +1,5 @@
 import "server-only";
+import { isOpenResearchOpportunity } from "./gmail-reply-matcher.ts";
 import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import pg from "pg";
@@ -177,10 +178,18 @@ export function postgresTrackerStore(pool: Pool) {
         "SELECT * FROM tracker.activities WHERE opportunity_id = $1 ORDER BY occurred_at DESC, created_at DESC, id DESC", [id],
       )).rows;
     },
-    logActivity(id, data) {
+    logActivity(id, data, sourceId) {
       return inTrackerTransaction(pool, async client => {
         const opportunity = (await client.query<Opportunity>("SELECT * FROM tracker.opportunities WHERE id = $1 FOR UPDATE", [id])).rows[0];
         if (!opportunity) throw new Error("Opportunity not found");
+        if (sourceId) {
+          const existing = (await client.query<{ opportunity_id: string }>("SELECT opportunity_id FROM tracker.activities WHERE id = $1", [sourceId])).rows[0];
+          if (existing) {
+            if (existing.opportunity_id !== id) throw new Error("The source is already assigned to a different opportunity.");
+            return sourceId;
+          }
+          if (!isOpenResearchOpportunity(opportunity)) throw new Error("This research opportunity is closed or archived.");
+        }
         const { latest, last_email } = (await client.query<{ latest: string | null; last_email: string | null }>(`
           SELECT MAX(occurred_at) FILTER (WHERE activity_type NOT IN ('General note', 'Follow-up email sent')) AS latest,
             MAX(occurred_at) FILTER (WHERE activity_type IN ('Initial email sent', 'Follow-up email sent')) AS last_email
@@ -188,11 +197,12 @@ export function postgresTrackerStore(pool: Pool) {
         `, [id])).rows[0]!;
         const changes = opportunityAfterActivity(opportunity, data, latest, last_email);
         const now = new Date().toISOString();
-        const activityId = randomUUID();
-        await client.query(
-          "INSERT INTO tracker.activities (id, opportunity_id, activity_type, occurred_at, notes, positive_response, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+        const activityId = sourceId ?? randomUUID();
+        const inserted = await client.query(
+          "INSERT INTO tracker.activities (id, opportunity_id, activity_type, occurred_at, notes, positive_response, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (id) DO NOTHING",
           [activityId, id, data.activity_type, data.occurred_at, data.notes, data.activity_type === "Reply received" && data.positive_response ? 1 : 0, now],
         );
+        if (inserted.rowCount !== 1) throw new Error("The activity source is already recorded.");
         await client.query(
           "UPDATE tracker.opportunities SET status = $1, closed_outcome = $2, next_action = $3, next_action_date = $4, updated_at = $5 WHERE id = $6",
           [changes.status, changes.closed_outcome, changes.next_action, changes.next_action_date, now, id],

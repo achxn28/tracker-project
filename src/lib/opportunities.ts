@@ -1,4 +1,5 @@
 import "server-only";
+import { isOpenResearchOpportunity } from "./gmail-reply-matcher.ts";
 import { DatabaseSync } from "node:sqlite";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
@@ -182,16 +183,25 @@ export function openOpportunityStore(filename: string) {
     },
     allActivities: () => db.prepare("SELECT * FROM activities ORDER BY occurred_at DESC, created_at DESC, id DESC").all().map(row => ({ ...row })) as Activity[],
     activities: (id: string) => db.prepare("SELECT * FROM activities WHERE opportunity_id = ? ORDER BY occurred_at DESC, created_at DESC, id DESC").all(id).map(row => ({ ...row })) as Activity[],
-    logActivity(id: string, data: ActivityInput) {
+    logActivity(id: string, data: ActivityInput, sourceId?: string) {
       db.exec("BEGIN IMMEDIATE");
       try {
         const opportunity = db.prepare("SELECT * FROM opportunities WHERE id = ?").get(id) as Opportunity | undefined;
         if (!opportunity) throw new Error("Opportunity not found");
+        if (sourceId) {
+          const existing = db.prepare("SELECT opportunity_id FROM activities WHERE id = ?").get(sourceId);
+          if (existing) {
+            if (existing.opportunity_id !== id) throw new Error("The source is already assigned to a different opportunity.");
+            db.exec("COMMIT");
+            return sourceId;
+          }
+          if (!isOpenResearchOpportunity(opportunity)) throw new Error("This research opportunity is closed or archived.");
+        }
         const latest = db.prepare("SELECT MAX(occurred_at) AS time FROM activities WHERE opportunity_id = ? AND activity_type NOT IN ('General note', 'Follow-up email sent')").get(id)?.time as string | null;
         const lastEmail = db.prepare("SELECT MAX(occurred_at) AS time FROM activities WHERE opportunity_id = ? AND activity_type IN ('Initial email sent', 'Follow-up email sent')").get(id)?.time as string | null;
         const changes = opportunityAfterActivity(opportunity, data, latest, lastEmail);
         const timestamp = new Date().toISOString();
-        const activityId = randomUUID();
+        const activityId = sourceId ?? randomUUID();
         db.prepare("INSERT INTO activities (id, opportunity_id, activity_type, occurred_at, notes, positive_response, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)")
           .run(activityId, id, data.activity_type, data.occurred_at, data.notes, data.activity_type === "Reply received" && data.positive_response ? 1 : 0, timestamp);
         db.prepare("UPDATE opportunities SET status = ?, closed_outcome = ?, next_action = ?, next_action_date = ?, updated_at = ? WHERE id = ?")
