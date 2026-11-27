@@ -87,11 +87,13 @@ const goalColumns = ["title", "metric_type", "target_count", "start_date", "end_
 type Table = "opportunities" | "tasks" | "goals";
 
 export function postgresTrackerStore(pool: Pool) {
-  async function addRow<K extends string>(table: Table, columns: readonly K[], data: Record<K, unknown>) {
-    const id = randomUUID();
+  function addRow<K extends string>(table: Table, columns: readonly K[], data: Record<K, unknown>): Promise<ReturnType<typeof randomUUID>>;
+  function addRow<K extends string>(table: Table, columns: readonly K[], data: Record<K, unknown>, sourceId: string | undefined): Promise<string>;
+  async function addRow<K extends string>(table: Table, columns: readonly K[], data: Record<K, unknown>, sourceId?: string) {
+    const id = sourceId ?? randomUUID();
     const now = new Date().toISOString();
     const names = ["id", ...columns, "created_at", "updated_at"];
-    await pool.query(`INSERT INTO tracker.${table} (${names.join(", ")}) VALUES (${names.map((_, index) => `$${index + 1}`).join(", ")})`,
+    await pool.query(`INSERT INTO tracker.${table} (${names.join(", ")}) VALUES (${names.map((_, index) => `$${index + 1}`).join(", ")})${sourceId ? " ON CONFLICT (id) DO NOTHING" : ""}`,
       [id, ...columns.map(key => data[key]), now, now]);
     return id;
   }
@@ -145,7 +147,7 @@ export function postgresTrackerStore(pool: Pool) {
     async getTask(id) {
       return (await pool.query<Task>("SELECT * FROM tracker.tasks WHERE id = $1", [id])).rows.at(0);
     },
-    createTask: data => addRow("tasks", taskColumns, data),
+    createTask: (data, sourceId?: string) => addRow("tasks", taskColumns, data, sourceId),
     updateTask: (id, data) => updateRow("tasks", id, taskColumns, data),
     deleteTask: id => removeRow("tasks", id),
     completeTask(id, completed) {

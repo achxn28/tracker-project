@@ -151,10 +151,10 @@ export function openOpportunityStore(filename: string) {
       const row = db.prepare("SELECT * FROM tasks WHERE id = ?").get(id);
       return row ? { ...row } as Task : undefined;
     },
-    createTask(data: TaskInput) {
-      const id = randomUUID();
+    createTask(data: TaskInput, sourceId?: string) {
+      const id = sourceId ?? randomUUID();
       const now = new Date().toISOString();
-      db.prepare("INSERT INTO tasks (id, title, description, category, priority, opportunity_id, start_date, due_date, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+      db.prepare("INSERT INTO tasks (id, title, description, category, priority, opportunity_id, start_date, due_date, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (id) DO NOTHING")
         .run(id, data.title, data.description, data.category, data.priority, data.opportunity_id, data.start_date, data.due_date, now, now);
       return id;
     },
