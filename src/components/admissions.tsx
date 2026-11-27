@@ -72,18 +72,23 @@ function importSummary(preview: AdmissionsData, data: AdmissionsData) {
 export function Admissions({ data, preview, selectedCollege }: { data: AdmissionsData; preview: AdmissionsData | null; selectedCollege?: string }) {
   const [status, setStatus] = useState<SupplementStatus | "All">("All");
   const [school, setSchool] = useState(selectedCollege ?? "");
-  const [collapsedSchools, setCollapsedSchools] = useState<ReadonlySet<string>>(() => new Set());
+  const [collapseOverrides, setCollapseOverrides] = useState<ReadonlyMap<string, boolean>>(() => new Map());
 
   function setSchoolCollapsed(id: string, collapsed: boolean) {
-    setCollapsedSchools(current => {
-      const next = new Set(current);
-      if (collapsed) next.add(id);
-      else next.delete(id);
-      return next;
-    });
+    setCollapseOverrides(current => new Map(current).set(id, collapsed));
   }
   const visible = school ? data.colleges.filter(item => item.id === school || item.id === "uc-piqs" && ucCampusIds.includes(school)) : data.colleges;
   const essays = data.supplements.filter(item => visible.some(college => college.id === item.collegeId));
+  const completedSchools = new Set(visible.filter(college => {
+    if (college.submitted) return true;
+    const sharesUcEssays = ucCampusIds.includes(college.id);
+    const writing = essays.filter(essay => essay.collegeId === college.id || (sharesUcEssays && essay.collegeId === "uc-piqs"));
+    return writing.length > 0 && writing.every(essay => essay.status === "Done");
+  }).map(college => college.id));
+
+  function isCollapsed(id: string) {
+    return completedSchools.has(id) && (collapseOverrides.get(id) ?? (id !== selectedCollege));
+  }
 
   return <>
     {preview && (preview.colleges.length > 0 || preview.supplements.length > 0) && <details className="tracker-panel space-y-4 p-5" open={data.colleges.length === 0}>
@@ -118,7 +123,7 @@ export function Admissions({ data, preview, selectedCollege }: { data: Admission
       <ul className="space-y-2 text-sm">
         {essays.filter(essay => essay.status === status).map(essay => <li key={essay.id}>
           <a className="text-primary underline-offset-4 hover:underline" href={`#supplement-${essay.id}`} onClick={() => {
-            if (collapsedSchools.has(essay.collegeId)) flushSync(() => setSchoolCollapsed(essay.collegeId, false));
+            if (isCollapsed(essay.collegeId)) flushSync(() => setSchoolCollapsed(essay.collegeId, false));
           }}>{visible.find(college => college.id === essay.collegeId)?.name} · {essay.title}</a>
           <span className="ml-2 text-muted-foreground">{essay.dueDate ? displayDate(essay.dueDate) : "Unscheduled"}</span>
         </li>)}
@@ -135,11 +140,8 @@ export function Admissions({ data, preview, selectedCollege }: { data: Admission
       const all = essays.filter(essay => essay.collegeId === college.id);
       const items = status === "All" ? all : all.filter(essay => essay.status === status);
       if (status !== "All" && !items.length) return null;
-      const writing = ucCampusIds.includes(college.id)
-        ? [...all, ...data.supplements.filter(essay => essay.collegeId === "uc-piqs")]
-        : all;
-      const canCollapse = college.submitted || writing.length > 0 && writing.every(essay => essay.status === "Done");
-      const collapsed = canCollapse && collapsedSchools.has(college.id);
+      const canCollapse = completedSchools.has(college.id);
+      const collapsed = isCollapsed(college.id);
       const detailsId = `college-details-${college.id}`;
       const Chevron = collapsed ? ChevronRight : ChevronDown;
 
