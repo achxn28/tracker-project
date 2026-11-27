@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState, useTransition, type FormEvent, type ReactNode } from "react";
 import { flushSync } from "react-dom";
 import { confirmAdmissionsImport, saveApplication, saveEssay } from "@/app/admissions/actions";
+import { QueueControls } from "@/components/queue-controls";
 import { collegeHref, supplementStatuses, ucCampusIds, type AdmissionsData, type College, type Supplement, type SupplementStatus } from "@/lib/admissions-model";
 import { displayDate } from "@/lib/opportunity-model";
 
@@ -175,7 +176,12 @@ export function Admissions({ data, preview, selectedCollege }: { data: Admission
           {items.map(essay => <article key={essay.id} id={`supplement-${essay.id}`} className="scroll-mt-5 space-y-2 p-5 target:bg-primary/10">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <h3 className="font-medium">{essay.title}</h3>
-              <span className="tracker-badge">{essay.status}</span>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="tracker-badge">{essay.status}</span>
+                {essay.status !== "Done" && <QueueControls item={{
+                  id: essay.id, kind: "supplement", title: essay.title, date: essay.dueDate, context: college.name,
+                }} />}
+              </div>
             </div>
             <p className="text-sm text-muted-foreground">{[essay.dueDate ? `Writing due ${displayDate(essay.dueDate)}` : "No writing deadline", essay.wordLimit && `${essay.wordLimit} words max`, !essay.prompt && "Prompt missing"].filter(Boolean).join(" · ")}</p>
             {essay.prompt && <details className="space-y-2 text-sm"><summary className="cursor-pointer">Read prompt</summary><p className="whitespace-pre-wrap">{essay.prompt}</p></details>}
