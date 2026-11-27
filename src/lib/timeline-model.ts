@@ -46,3 +46,8 @@ export function clipTimelineSpan(row: Pick<TimelineRow, "start" | "end">, window
   const clippedEnd = end > window.end ? window.end : end;
   return { offset: calendarDistance(window.start, clippedStart), days: calendarDistance(clippedStart, clippedEnd), before: row.start < window.start, after: end > window.end };
 }
+
+export function timelineBarSpan(row: TimelineRow, today: string, window: { start: string; end: string }) {
+  const start = row.marker && !row.completed && today < row.end ? today : row.start;
+  return clipTimelineSpan({ start, end: row.end }, window);
+}

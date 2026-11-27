@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { calendarDistance, clipTimelineSpan, shiftTimeline, timelineRows, timelineWindow, validCalendarDate } from "../src/lib/timeline-model.ts";
+import { calendarDistance, clipTimelineSpan, shiftTimeline, timelineBarSpan, timelineRows, timelineWindow, validCalendarDate } from "../src/lib/timeline-model.ts";
 import type { Task } from "../src/lib/task-model.ts";
 import type { GoalView } from "../src/lib/goal-model.ts";
 
@@ -37,4 +37,20 @@ test("task markers, unscheduled work, and goal progress retain their saved meani
   clipTimelineSpan(goalRow, timelineWindow("2027-02-01", "days"));
   assert.equal(goalRow.progress, 15);
   assert.ok(goalRow.href.includes("goal=goal"));
+});
+
+test("upcoming deadlines stretch from today through the due date", () => {
+  const today = "2026-11-26";
+  const window = timelineWindow(today, "weeks");
+  const essay = {
+    id: "essay", kind: "supplement" as const, title: "Supplement", start: "2026-12-11", end: "2026-12-11",
+    marker: true, completed: false, paused: false, href: "/admissions",
+  };
+  assert.deepEqual(timelineBarSpan(essay, today, window), { offset: 0, days: 16, before: false, after: false });
+  assert.deepEqual(timelineBarSpan(essay, today, timelineWindow("2026-12-03", "weeks")), {
+    offset: 0, days: 9, before: true, after: false,
+  });
+  assert.equal(timelineBarSpan({ ...essay, completed: true }, today, window)?.days, 1);
+  assert.equal(timelineBarSpan(essay, "2026-12-12", window)?.days, 1);
+  assert.equal(timelineBarSpan({ ...essay, marker: false, start: "2026-12-07" }, today, window)?.offset, 11);
 });

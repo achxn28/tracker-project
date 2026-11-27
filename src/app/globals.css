@@ -298,8 +298,8 @@ button:not(:disabled), select { cursor: pointer; }
 }
 .dark .timeline-label { background: rgb(78 54 72 / 62%); }
 .timeline-deadline-bar.task-timeline-bar {
-  background: rgb(var(--urgency-rgb) / 75%);
-  border-color: rgb(var(--urgency-rgb) / 90%);
+  background: rgb(var(--urgency-rgb) / 45%);
+  border-color: rgb(var(--urgency-rgb) / 70%);
 }
 @media (prefers-reduced-transparency: reduce) {
   .timeline-label, .dark .timeline-label { background: var(--secondary); }

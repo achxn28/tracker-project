@@ -9,7 +9,7 @@ import { displayDate } from "@/lib/opportunity-model";
 import type { AdmissionsData } from "@/lib/admissions-model";
 import type { Task } from "@/lib/task-model";
 import type { GoalView } from "@/lib/goal-model";
-import { calendarDistance, clipTimelineSpan, shiftTimeline, timelineRows, timelineWindow, validCalendarDate, type TimelineScale } from "@/lib/timeline-model";
+import { calendarDistance, shiftTimeline, timelineBarSpan, timelineRows, timelineWindow, validCalendarDate, type TimelineScale } from "@/lib/timeline-model";
 
 const rowLabels = { task: "Task", goal: "Goal", supplement: "Supplement" };
 
@@ -23,7 +23,7 @@ export function Timeline({ tasks, goals, today, admissions }: { tasks: Task[]; g
   const width = totalDays * dayWidth;
   const all = timelineRows(tasks, goals, admissions);
   const rows = all.rows.flatMap(row => {
-    const span = clipTimelineSpan(row, window);
+    const span = timelineBarSpan(row, today, window);
     return span ? [{ row, span }] : [];
   });
   const ticks: { start: number; days: number; label: string }[] = [];
@@ -62,7 +62,7 @@ export function Timeline({ tasks, goals, today, admissions }: { tasks: Task[]; g
               className={`absolute top-1/2 flex h-10 -translate-y-1/2 items-center ${row.completed ? "opacity-55" : ""}`}
               style={{ left: span.offset * dayWidth + 1, width: Math.max(4, span.days * dayWidth - 2) }}
             >
-              <span className={`relative flex w-full items-center overflow-hidden rounded-sm ${row.marker ? `timeline-deadline-bar ${scale === "months" ? "h-1" : "h-2"}` : "h-7"} ${row.kind === "goal" ? "bg-primary/15" : `task-timeline-bar task-urgency task-urgency-${taskUrgency(row.end, row.completed, today).tone}`}`}>
+              <span className={`relative flex w-full items-center overflow-hidden rounded-sm h-8 ${row.marker ? "timeline-deadline-bar" : ""} ${row.kind === "goal" ? "bg-primary/15" : `task-timeline-bar task-urgency task-urgency-${taskUrgency(row.end, row.completed, today).tone}`}`}>
                 {row.kind === "goal" && <span aria-hidden="true" className="absolute inset-y-0 left-0 bg-primary/35" style={{ width: `${row.progress}%` }} />}
                 {span.days * dayWidth > 110 && <span aria-hidden="true" className="relative truncate px-3 text-xs">{span.before ? "… " : ""}{row.kind === "goal" ? `${row.current} / ${row.target}` : row.title}{span.after ? " …" : ""}</span>}
               </span>
@@ -72,7 +72,7 @@ export function Timeline({ tasks, goals, today, admissions }: { tasks: Task[]; g
       </div>
       {!rows.length && <div className="space-y-3 p-8"><h2 className="font-semibold">No scheduled work in this range</h2><p className="text-sm text-muted-foreground">Choose another date or schedule work.</p><div className="flex flex-wrap gap-3"><Link className="tracker-button" href="/tasks?new=1">Add task</Link><Link className="tracker-button" href="/goals">Manage goals</Link><Link className="tracker-button" href="/admissions">View admissions</Link></div></div>}
     </section>
-    <p className="text-sm text-muted-foreground">Short bars mark due dates. Longer bars show scheduled spans. Goal fill shows progress and the dashed line marks today.</p>
+    <p className="text-sm text-muted-foreground">Upcoming deadlines span from today through their due date. The dashed line marks today, and goal fill shows progress.</p>
     {all.rows.length > rows.length && <p className="text-sm text-muted-foreground">{all.rows.length - rows.length} scheduled items fall outside this date range.</p>}
     {all.unscheduled.length > 0 && <section className="tracker-panel space-y-4 p-5"><h2 className="font-semibold">Tasks without an end date</h2><p className="text-sm text-muted-foreground">These stay in your task list until you assign a due date.</p><ul className="space-y-3">{all.unscheduled.map(task => <li key={task.id}><Link className="text-sm underline underline-offset-4" href={`/tasks?task=${task.id}#task-${task.id}`}>{task.title}</Link>{task.start_date && <span className="ml-3 text-sm text-muted-foreground">Starts {displayDate(task.start_date)}</span>}</li>)}</ul></section>}
   </main></div>;
