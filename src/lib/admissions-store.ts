@@ -32,7 +32,8 @@ export function readAdmissions(): AdmissionsData {
   return withAdmissionsDatabase(db => ({
     colleges: (db.prepare("SELECT * FROM colleges ORDER BY deadline IS NULL, deadline, name").all() as unknown as College[])
       .map(college => ({ ...college, submitted: Boolean(college.submitted), supplementsUnknown: Boolean(college.supplementsUnknown) })),
-    supplements: db.prepare("SELECT * FROM supplements ORDER BY dueDate IS NULL, dueDate, rowid").all() as unknown as Supplement[],
+    supplements: (db.prepare("SELECT * FROM supplements ORDER BY dueDate IS NULL, dueDate, rowid").all() as unknown as Supplement[])
+      .map(supplement => ({ ...supplement })),
   }));
 }
 
