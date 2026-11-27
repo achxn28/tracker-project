@@ -24,7 +24,7 @@ npm run dev
 
 Open [localhost:3000](http://localhost:3000). The homepage opens the dashboard.
 Use the navigation to switch between Dashboard, Timeline, Opportunities, Tasks,
-Goals, and Settings.
+Goals, Admissions, and Settings.
 Both development and production servers bind to `127.0.0.1` for local use.
 The app has no sign-in and defaults to SQLite. See the [Postgres migration
 runbook](docs/postgres-migration.md) for the optional database backend.
@@ -39,6 +39,18 @@ persist across refreshes and server restarts. This folder is ignored by Git.
 To back up your records, stop the server and copy the database file somewhere safe.
 `OPPORTUNITY_DB_PATH` can select another database file, including a disposable
 database for manual testing. Do not deploy this unauthenticated local app online.
+
+## Admissions
+
+Use Admissions to track each supplement from writing through review and completion.
+A supplement's writing deadline appears on the Timeline. A school's application
+deadline appears on the dashboard Calendar. Edit both dates in Admissions.
+
+Admissions records stay in `data/admissions/admissions.sqlite` on this computer.
+Back up this file along with your other tracker data. An optional private
+`admissions-import.json` in the same directory can be reviewed and imported
+from the Admissions tab. Reimporting keeps edits to previously imported records.
+`TRACKER_ADMISSIONS_DIR` selects a different directory for testing.
 
 ## Checks and production build
 

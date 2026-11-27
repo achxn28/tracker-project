@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import type { AdmissionsData, College, Supplement } from "./admissions-model.ts";
 
-const directory = () => process.env.TRACKER_ADMISSIONS_DIR || join(process.cwd(), "data");
+const directory = () => process.env.TRACKER_ADMISSIONS_DIR || join(process.cwd(), "data", "admissions");
 
 function withAdmissionsDatabase<T>(operation: (db: DatabaseSync) => T): T {
   mkdirSync(directory(), { recursive: true, mode: 0o700 });
