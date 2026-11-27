@@ -29,6 +29,6 @@ export function parseTask(raw: Record<string, unknown>): { data: TaskInput; erro
   return { data: { title, category, priority, start_date, due_date, description: text("description") || null, opportunity_id: text("opportunity_id") || null } };
 }
 
-export function sortTasks(tasks: Task[]) {
+export function sortTasks<T extends Pick<Task, "due_date" | "priority" | "title">>(tasks: T[]) {
   return [...tasks].sort((a, b) => (a.due_date ?? "9999").localeCompare(b.due_date ?? "9999") || priorities.indexOf(a.priority) - priorities.indexOf(b.priority) || a.title.localeCompare(b.title));
 }

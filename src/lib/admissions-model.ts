@@ -29,6 +29,16 @@ export const ucCampusIds = ["uc-berkeley", "ucla", "ucsd"];
 export const collegeHref = (id: string) => `/admissions?college=${encodeURIComponent(id)}#college-${encodeURIComponent(id)}`;
 export const supplementHref = (essay: Supplement) => `/admissions?college=${encodeURIComponent(essay.collegeId)}#supplement-${encodeURIComponent(essay.id)}`;
 
+export function scheduledSupplements({ colleges, supplements }: AdmissionsData) {
+  const schools = new Map(colleges.map(college => [college.id, college.name]));
+  return supplements.flatMap(essay => essay.dueDate ? [{
+    id: essay.id, title: essay.title, school: schools.get(essay.collegeId) ?? "Admissions",
+    dueDate: essay.dueDate, status: essay.status, href: supplementHref(essay),
+  }] : []);
+}
+
+export type ScheduledSupplement = ReturnType<typeof scheduledSupplements>[number];
+
 export function validDocsUrl(url: string) {
   return /^https:\/\/docs\.google\.com\/document\/d\/[\w-]+(?:\/edit)?(?:\?tab=[\w.-]+)?$/.test(url);
 }

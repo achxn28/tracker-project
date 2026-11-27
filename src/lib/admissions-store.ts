@@ -56,6 +56,10 @@ export function saveSupplement(supplement: Supplement) {
   `).run(...supplementValues(supplement)));
 }
 
+export function completeSupplement(id: string) {
+  return withAdmissionsDatabase(db => db.prepare("UPDATE supplements SET status = 'Done' WHERE id = ?").run(id).changes > 0);
+}
+
 export function readAdmissionsPreview(): AdmissionsData | null {
   try {
     return JSON.parse(readFileSync(join(directory(), "admissions-import.json"), "utf8")) as AdmissionsData;

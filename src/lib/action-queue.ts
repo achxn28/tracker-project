@@ -1,9 +1,10 @@
+import type { ScheduledSupplement } from "./admissions-model.ts";
 import { newYorkInput, type Activity } from "./activity-model.ts";
 import type { Opportunity } from "./opportunity-model.ts";
 import { sameActionTitle, type Task } from "./task-model.ts";
 
 export const queueSections = ["Overdue", "Approaching deadlines", "Due today", "Upcoming", "Ready for outreach"] as const;
-export type QueueItem = { id: string; kind: "task" | "next_action" | "deadline" | "ready"; title: string; context: string; date: string | null; section: typeof queueSections[number]; href: string; opportunity_id: string | null; priority: Opportunity["priority"] };
+export type QueueItem = { id: string; kind: "task" | "supplement" | "next_action" | "deadline" | "ready"; title: string; context: string; date: string | null; section: typeof queueSections[number]; href: string; opportunity_id: string | null; priority: Opportunity["priority"] };
 export const todayInNewYork = (now = new Date()) => newYorkInput(now).slice(0, 10);
 export function addCalendarDays(date: string, days: number) {
   const value = new Date(`${date}T12:00:00Z`);
@@ -11,7 +12,7 @@ export function addCalendarDays(date: string, days: number) {
   return value.toISOString().slice(0, 10);
 }
 
-export function buildActionQueue(opportunities: Opportunity[], tasks: Task[], activities: Activity[], today = todayInNewYork()): QueueItem[] {
+export function buildActionQueue(opportunities: Opportunity[], tasks: Task[], activities: Activity[], today = todayInNewYork(), supplements: ScheduledSupplement[] = []): QueueItem[] {
   const end = addCalendarDays(today, 7);
   const items: QueueItem[] = [];
   const names = new Map(opportunities.map(item => [item.id, item.organization_name]));
@@ -20,6 +21,13 @@ export function buildActionQueue(opportunities: Opportunity[], tasks: Task[], ac
   for (const task of openTasks) {
     if (!task.due_date || task.due_date > end) continue;
     items.push({ id: task.id, kind: "task", title: task.title, context: task.opportunity_id ? names.get(task.opportunity_id) ?? task.category : task.category, date: task.due_date, section: sectionFor(task.due_date), href: `/tasks?task=${encodeURIComponent(task.id)}#task-${task.id}`, opportunity_id: task.opportunity_id, priority: task.priority });
+  }
+  for (const essay of supplements) {
+    if (essay.status === "Done" || essay.dueDate > end) continue;
+    items.push({
+      id: essay.id, kind: "supplement", title: essay.title, context: `${essay.school} · ${essay.status}`,
+      date: essay.dueDate, section: sectionFor(essay.dueDate), href: essay.href, opportunity_id: null, priority: "medium",
+    });
   }
   for (const opportunity of opportunities) {
     if (opportunity.status === "Closed" || opportunity.archived_at) continue;

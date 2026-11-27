@@ -3,8 +3,9 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
-import type { AdmissionsData } from "../src/lib/admissions-model.ts";
-import { importAdmissions, readAdmissions, saveCollege, saveSupplement } from "../src/lib/admissions-store.ts";
+import { buildActionQueue } from "../src/lib/action-queue.ts";
+import { scheduledSupplements, type AdmissionsData } from "../src/lib/admissions-model.ts";
+import { completeSupplement, importAdmissions, readAdmissions, saveCollege, saveSupplement } from "../src/lib/admissions-store.ts";
 import { calendarDeadlines } from "../src/lib/dashboard-calendar.ts";
 import { timelineRows } from "../src/lib/timeline-model.ts";
 
@@ -26,7 +27,16 @@ test("Admissions edits update the correct schedule and survive reimport", () => 
     importAdmissions(seed);
     assert.deepEqual(readAdmissions(), seed);
     saveCollege({ ...seed.colleges[0], deadline: "2027-01-03", submitted: true });
-    saveSupplement({ ...seed.supplements[0], dueDate: "2026-12-23", status: "Done" });
+    const queue = (today: string) => buildActionQueue([], [], [], today, scheduledSupplements(readAdmissions()));
+    assert.equal(queue("2026-12-13").length, 0);
+    assert.deepEqual(queue("2026-12-14").map(({ kind, section }) => ({ kind, section })), [{ kind: "supplement", section: "Upcoming" }]);
+    assert.equal(queue("2026-12-22")[0].section, "Overdue");
+
+    saveSupplement({ ...seed.supplements[0], dueDate: "2026-12-23" });
+    assert.equal(queue("2026-12-22")[0].date, "2026-12-23");
+    assert.equal(completeSupplement("essay"), true);
+    assert.equal(completeSupplement("unknown"), false);
+    assert.equal(queue("2026-12-22").length, 0);
     importAdmissions(seed);
 
     const data = readAdmissions();

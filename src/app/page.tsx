@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { scheduledSupplements } from "@/lib/admissions-model";
 import { readAdmissions } from "@/lib/admissions-store";
 import { DashboardCalendar } from "@/components/dashboard-calendar";
 import { calendarDeadlines } from "@/lib/dashboard-calendar";
@@ -21,7 +22,8 @@ export default async function Home() {
     return { opportunities, tasks, activities, goals };
   });
   const activeGoals = data.goals.filter(goal => goal.status === "active").map(goal => goalWithProgress(goal, data, now));
-  const queue = buildActionQueue(data.opportunities, data.tasks, data.activities, today);
+  const admissions = readAdmissions();
+  const queue = buildActionQueue(data.opportunities, data.tasks, data.activities, today, scheduledSupplements(admissions));
   const names = new Map(data.opportunities.map(item => [item.id, item.organization_name]));
   const recent = [
     ...data.activities.map(activity => ({ id: activity.id, title: activity.activity_type, context: names.get(activity.opportunity_id) ?? "Opportunity", time: activity.occurred_at, href: `/opportunities?opportunity=${encodeURIComponent(activity.opportunity_id)}` })),
@@ -37,7 +39,7 @@ export default async function Home() {
         <div>
           <p className="tracker-eyebrow mb-3">{new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "long", month: "long", day: "numeric" }).format(now)}</p>
           <h1 className="text-4xl font-semibold tracking-tight">Your next steps</h1>
-          <p className="mt-3 text-muted-foreground">Your recruiting work, in order of what needs attention.</p>
+          <p className="mt-3 text-muted-foreground">Your tasks and deadlines, in order of what needs attention.</p>
         </div>
         <div className="flex flex-wrap gap-2"><Link className="tracker-button" href="/opportunities">View opportunities</Link><Link className="tracker-button tracker-primary" href="/tasks?new=1">Add task</Link></div>
       </header>
@@ -55,10 +57,10 @@ export default async function Home() {
             const items = queue.filter(item => item.section === section);
             return items.length ? <div key={section}>
               <h3 className={`flex items-center justify-between border-y bg-muted/40 px-5 py-3 text-sm font-semibold ${section === "Overdue" ? "text-destructive" : ""}`}><span>{section}</span><span className="tabular-nums">{items.length}</span></h3>
-              <ul className="divide-y">{items.map(item => <li key={`${item.kind}:${item.id}`} className={`flex flex-wrap items-center justify-between gap-3 px-5 py-4 ${item.kind === "task" ? `task-glass task-urgency task-urgency-${taskUrgency(item.date, false, today).tone}` : ""}`}>
+              <ul className="divide-y">{items.map(item => <li key={`${item.kind}:${item.id}`} className={`flex flex-wrap items-center justify-between gap-3 px-5 py-4 ${(item.kind === "task" || item.kind === "supplement") ? `task-glass task-urgency task-urgency-${taskUrgency(item.date, false, today).tone}` : ""}`}>
                 <div className="min-w-0 flex-1 basis-48"><Link className="break-words font-medium underline-offset-4 hover:underline" href={item.href}>{item.title}</Link>
                   <p className="mt-1 text-sm text-muted-foreground">{item.context}</p>
-                  <div className="mt-2 flex flex-wrap items-center gap-2 text-sm"><span className={section === "Overdue" ? "text-destructive" : "text-muted-foreground"}>{item.date ? displayDate(item.date) : "Ready when you are"}</span>{item.kind === "task" && <span className="task-urgency-label text-xs font-medium">{taskUrgency(item.date, false, today).label}</span>}{item.priority === "high" && <span className="tracker-badge">High priority</span>}</div>
+                  <div className="mt-2 flex flex-wrap items-center gap-2 text-sm"><span className={section === "Overdue" ? "text-destructive" : "text-muted-foreground"}>{item.date ? displayDate(item.date) : "Ready when you are"}</span>{(item.kind === "task" || item.kind === "supplement") && <span className="task-urgency-label text-xs font-medium">{taskUrgency(item.date, false, today).label}</span>}{item.priority === "high" && <span className="tracker-badge">High priority</span>}</div>
                 </div><QueueControls item={item} />
               </li>)}</ul>
             </div> : null;
@@ -66,7 +68,7 @@ export default async function Home() {
           <p className="text-xs leading-relaxed text-muted-foreground">America/New_York · Dated work covers today and the next seven days, plus overdue items.</p>
         </section>
 
-        <aside className="min-w-0 space-y-7"><DashboardCalendar today={today} deadlines={calendarDeadlines(data.tasks, activeGoals, data.opportunities, data.activities, readAdmissions().colleges)} />
+        <aside className="min-w-0 space-y-7"><DashboardCalendar today={today} deadlines={calendarDeadlines(data.tasks, activeGoals, data.opportunities, data.activities, admissions.colleges)} />
         <section className="min-w-0 space-y-4" aria-labelledby="goals-heading">
           <div className="flex flex-wrap items-center justify-between gap-3"><h2 id="goals-heading" className="text-xl font-semibold tracking-tight">Goal progress</h2><Link className="text-sm text-primary underline-offset-4 hover:underline" href="/goals">Manage goals</Link></div>
           {activeGoals.length ? <div className="tracker-panel divide-y overflow-hidden">{activeGoals.map(goal => <Link key={goal.id} href={`/goals?goal=${goal.id}#goal-${goal.id}`} className="block space-y-3 p-5 transition-colors hover:bg-muted/40">

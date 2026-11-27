@@ -3,7 +3,7 @@
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { supplementStatuses, validDocsUrl, type SupplementStatus } from "@/lib/admissions-model";
-import { importAdmissions, readAdmissionsPreview, saveCollege, saveSupplement } from "@/lib/admissions-store";
+import { completeSupplement, importAdmissions, readAdmissionsPreview, saveCollege, saveSupplement } from "@/lib/admissions-store";
 import { validCalendarDate } from "@/lib/timeline-model";
 
 function field(form: FormData, name: string) {
@@ -12,7 +12,7 @@ function field(form: FormData, name: string) {
 }
 
 function refresh() {
-  for (const path of ["/admissions", "/timeline", "/"]) revalidatePath(path);
+  for (const path of ["/admissions", "/timeline", "/tasks", "/"]) revalidatePath(path);
 }
 
 export async function saveApplication(id: string | null, form: FormData) {
@@ -56,6 +56,16 @@ export async function saveEssay(id: string | null, collegeId: string, form: Form
     return "Could not save the supplement. Try again.";
   }
   refresh();
+}
+
+export async function markSupplementDone(id: string): Promise<{ message?: string }> {
+  try {
+    if (!completeSupplement(id)) return { message: "This supplement could not be found." };
+  } catch {
+    return { message: "Could not complete the supplement. Try again." };
+  }
+  refresh();
+  return {};
 }
 
 export async function confirmAdmissionsImport() {

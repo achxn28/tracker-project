@@ -1,3 +1,5 @@
+import { scheduledSupplements } from "@/lib/admissions-model";
+import { readAdmissions } from "@/lib/admissions-store";
 import { TaskManager } from "@/components/task-manager";
 import { withTrackerStore } from "@/lib/tracker-store";
 import { todayInNewYork } from "@/lib/action-queue";
@@ -12,5 +14,5 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
     const [tasks, opportunities] = await Promise.all([store.tasks(), store.list()]);
     return { tasks, opportunities };
   });
-  return <TaskManager key={`${opportunityId}:${taskId}:${query.new === "1"}`} initialTasks={data.tasks} opportunities={data.opportunities} today={todayInNewYork()} initialOpportunityId={opportunityId} initialTaskId={taskId} initiallyAdding={query.new === "1"} />;
+  return <TaskManager key={`${opportunityId}:${taskId}:${query.new === "1"}`} initialTasks={data.tasks} supplements={scheduledSupplements(readAdmissions())} opportunities={data.opportunities} today={todayInNewYork()} initialOpportunityId={opportunityId} initialTaskId={taskId} initiallyAdding={query.new === "1"} />;
 }
