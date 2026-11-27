@@ -74,7 +74,8 @@ and separate from the launcher.
 
 The optional Postgres backend, backup, import, and restore commands are
 implemented. SQLite remains the default. See the [migration runbook](docs/postgres-migration.md)
-for rehearsal and cutover. Gmail sync and extraction are still proposed.
+for rehearsal and cutover. Local manual Gmail review is implemented. Hosted
+sync and extraction are still proposed.
 
 Move the tracker database first while keeping the Next.js app on localhost.
 The current store in `src/lib/opportunities.ts` uses synchronous SQLite calls
@@ -137,8 +138,9 @@ opportunities. The matcher deduplicates candidates by mailbox and Gmail message
 ID. The [local Gmail connection](docs/gmail-setup.md) and the encrypted
 local candidate database are implemented and tested with fixtures. The
 database stores the source and candidate together under a unique mailbox and
-message key. Live mailbox sync, the review UI, and hosted Gmail processing
-remain future work.
+message key. **Check Gmail** runs a bounded manual metadata scan for linked
+threads and saved research contacts, with approval required before logging a
+reply. Continuous sync and hosted Gmail processing remain future work.
 
 - Use a separate OAuth client and grant for `gmail.readonly`. It grants mailbox
   read access, so restrict what the worker fetches in code. Keep the Sheets grant
