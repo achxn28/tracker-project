@@ -22,7 +22,10 @@ export function Timeline({ tasks, goals, today, admissions }: { tasks: Task[]; g
   const labelWidth = 224;
   const width = totalDays * dayWidth;
   const all = timelineRows(tasks, goals, admissions);
-  const rows = all.rows.map(row => ({ row, span: clipTimelineSpan(row, window) })).filter(item => item.span !== null);
+  const rows = all.rows.flatMap(row => {
+    const span = clipTimelineSpan(row, window);
+    return span ? [{ row, span }] : [];
+  });
   const ticks: { start: number; days: number; label: string }[] = [];
   if (scale === "months") {
     for (let index = 0; index < 6; index++) {
@@ -59,7 +62,7 @@ export function Timeline({ tasks, goals, today, admissions }: { tasks: Task[]; g
               className={`absolute top-1/2 flex h-10 -translate-y-1/2 items-center ${row.completed ? "opacity-55" : ""}`}
               style={{ left: span.offset * dayWidth + 1, width: Math.max(4, span.days * dayWidth - 2) }}
             >
-              <span className={`relative flex w-full items-center overflow-hidden rounded-sm ${row.marker ? "timeline-deadline-bar h-2" : "h-7"} ${row.kind === "goal" ? "bg-primary/15" : `task-timeline-bar task-urgency task-urgency-${taskUrgency(row.end, row.completed, today).tone}`}`}>
+              <span className={`relative flex w-full items-center overflow-hidden rounded-sm ${row.marker ? `timeline-deadline-bar ${scale === "months" ? "h-1" : "h-2"}` : "h-7"} ${row.kind === "goal" ? "bg-primary/15" : `task-timeline-bar task-urgency task-urgency-${taskUrgency(row.end, row.completed, today).tone}`}`}>
                 {row.kind === "goal" && <span aria-hidden="true" className="absolute inset-y-0 left-0 bg-primary/35" style={{ width: `${row.progress}%` }} />}
                 {span.days * dayWidth > 110 && <span aria-hidden="true" className="relative truncate px-3 text-xs">{span.before ? "… " : ""}{row.kind === "goal" ? `${row.current} / ${row.target}` : row.title}{span.after ? " …" : ""}</span>}
               </span>
