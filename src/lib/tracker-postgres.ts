@@ -178,7 +178,7 @@ export function postgresTrackerStore(pool: Pool) {
         "SELECT * FROM tracker.activities WHERE opportunity_id = $1 ORDER BY occurred_at DESC, created_at DESC, id DESC", [id],
       )).rows;
     },
-    logActivity(id, data, sourceId) {
+    logActivity(id, data, sourceId?: string) {
       return inTrackerTransaction(pool, async client => {
         const opportunity = (await client.query<Opportunity>("SELECT * FROM tracker.opportunities WHERE id = $1 FOR UPDATE", [id])).rows[0];
         if (!opportunity) throw new Error("Opportunity not found");

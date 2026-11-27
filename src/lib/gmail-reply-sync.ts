@@ -94,7 +94,7 @@ export async function resolveGmailThread(accessToken: string, input: string, fet
   const value = input.trim();
   if (messageIdPattern.test(value)) {
     const page = await get("messages", new URLSearchParams({
-      q: `rfc822msgid:${value.slice(1, -1)}`, maxResults: "2", fields: "nextPageToken,messages(id,threadId)",
+      q: `rfc822msgid:"${value.slice(1, -1)}"`, maxResults: "2", fields: "nextPageToken,messages(id,threadId)",
     }));
     const messages = listedMessages(page);
     if (messages.length === 1 && !page.nextPageToken) return messages[0].threadId;

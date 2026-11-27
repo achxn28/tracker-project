@@ -113,6 +113,9 @@ export function openGmailReplyStore(config: Pick<GmailConfig, "tokenPath" | "enc
         .all(mailboxKey(mailboxId))
         .map(row => decode<GmailReplyCandidate>(row.payload));
     },
+    review(mailboxId: string, messageId: string) {
+      return getReview(mailboxKey(mailboxId), messageKey(messageId));
+    },
     reviews(mailboxId: string) {
       return db.prepare(reviewRows).all(mailboxKey(mailboxId))
         .map(row => ({ candidate: decode<GmailReplyCandidate>(row.candidate), review: reviewState(row.review) }))
