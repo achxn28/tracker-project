@@ -17,6 +17,10 @@ export type GmailReplyCandidate = GmailReplySource & (
   | { state: "needs-review"; reason: "shared-contact" | "conflicting-thread-links" | "unexpected-thread-sender"; opportunityIds: string[] }
 );
 
+export function isOpenResearchOpportunity(opportunity: GmailTrackedOpportunity) {
+  return opportunity.type === "Research" && !opportunity.archived_at && opportunity.status !== "Closed";
+}
+
 export function createGmailReplyMatcher(context: GmailReplyContext) {
   const ownAddresses = new Set(context.ownAddresses.map(normalizeGmailAddress));
   const active = new Map<string, string | null>();
@@ -30,7 +34,7 @@ export function createGmailReplyMatcher(context: GmailReplyContext) {
   }
 
   for (const opportunity of context.opportunities) {
-    if (opportunity.type !== "Research" || opportunity.archived_at || opportunity.status === "Closed") continue;
+    if (!isOpenResearchOpportunity(opportunity)) continue;
     const address = opportunity.contact_email ? normalizeGmailAddress(opportunity.contact_email) : null;
     active.set(opportunity.id, address);
     if (address) add(contacts, address, opportunity.id);
