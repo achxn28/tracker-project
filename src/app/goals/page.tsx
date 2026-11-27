@@ -1,3 +1,4 @@
+import { readAdmissionsGoalProgress } from "@/lib/admissions-store";
 import { withTrackerStore } from "@/lib/tracker-store";
 import { goalWithProgress } from "@/lib/goal-model";
 import { todayInNewYork } from "@/lib/action-queue";
@@ -12,5 +13,7 @@ export default async function GoalsPage({ searchParams }: { searchParams: Promis
     const [opportunities, activities, tasks, savedGoals] = await Promise.all([store.list(), store.allActivities(), store.tasks(), store.goals()]);
     return savedGoals.map(goal => goalWithProgress(goal, { opportunities, activities, tasks }));
   });
+  const admissionsGoal = readAdmissionsGoalProgress();
+  if (admissionsGoal) goals.push(admissionsGoal);
   return <GoalManager key={focus} initialGoals={goals} today={todayInNewYork()} focus={focus} />;
 }

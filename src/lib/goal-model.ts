@@ -19,12 +19,11 @@ export type Metric = keyof typeof goalMetrics;
 type GoalSchedule = { title: string; start_date: string; end_date: string; status: "active" | "paused" };
 export type GoalInput = GoalSchedule & { metric_type: Metric; target_count: number };
 export type Goal = GoalInput & { id: string; created_at: string; updated_at: string };
-export type GoalView = GoalSchedule & {
-  id: string; metric_type: Metric | "all_supplements"; target_count: number;
-  current: number; percentage: number; completed: boolean;
-};
 export type AdmissionsGoal = GoalSchedule;
 export const admissionsGoalId = "admissions-supplements";
+export type GoalView = (Goal | (AdmissionsGoal & {
+  id: typeof admissionsGoalId; metric_type: "all_supplements"; target_count: number;
+})) & { current: number; percentage: number; completed: boolean };
 export const admissionsGoalLabel = "All tracked supplements";
 export type MetricData = { opportunities: Opportunity[]; activities: Activity[]; tasks: Task[] };
 

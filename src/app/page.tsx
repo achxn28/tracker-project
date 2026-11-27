@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { scheduledSupplements } from "@/lib/admissions-model";
-import { readAdmissions } from "@/lib/admissions-store";
+import { readAdmissions, readAdmissionsGoalProgress } from "@/lib/admissions-store";
 import { DashboardCalendar } from "@/components/dashboard-calendar";
 import { calendarDeadlines } from "@/lib/dashboard-calendar";
 import { TrackerHeader } from "@/components/tracker-header";
@@ -23,6 +23,8 @@ export default async function Home() {
   });
   const activeGoals = data.goals.filter(goal => goal.status === "active").map(goal => goalWithProgress(goal, data, now));
   const admissions = readAdmissions();
+  const admissionsGoal = readAdmissionsGoalProgress(admissions.supplements);
+  if (admissionsGoal?.status === "active") activeGoals.push(admissionsGoal);
   const queue = buildActionQueue(data.opportunities, data.tasks, data.activities, today, scheduledSupplements(admissions));
   const names = new Map(data.opportunities.map(item => [item.id, item.organization_name]));
   const recent = [
@@ -73,7 +75,7 @@ export default async function Home() {
           <div className="flex flex-wrap items-center justify-between gap-3"><h2 id="goals-heading" className="text-xl font-semibold tracking-tight">Goal progress</h2><Link className="text-sm text-primary underline-offset-4 hover:underline" href="/goals">Manage goals</Link></div>
           {activeGoals.length ? <div className="tracker-panel divide-y overflow-hidden">{activeGoals.map(goal => <Link key={goal.id} href={`/goals?goal=${goal.id}#goal-${goal.id}`} className="block space-y-3 p-5 transition-colors hover:bg-muted/40">
             <div className="flex items-start justify-between gap-3"><span className="min-w-0 break-words font-medium">{goal.title}</span><span className="shrink-0 text-sm tabular-nums text-primary">{goal.current} / {goal.target_count}</span></div>
-            <div className="h-1.5 overflow-hidden rounded-none bg-muted" role="progressbar" aria-label={goal.title} aria-valuemin={0} aria-valuemax={goal.target_count} aria-valuenow={Math.min(goal.current, goal.target_count)}><div className="h-full rounded-none bg-primary" style={{ width: `${goal.percentage}%` }} /></div>
+            <div className="h-1.5 overflow-hidden rounded-none bg-muted" role="progressbar" aria-label={goal.title} aria-valuemin={0} aria-valuemax={Math.max(1, goal.target_count)} aria-valuenow={Math.min(goal.current, goal.target_count)}><div className="h-full rounded-none bg-primary" style={{ width: `${goal.percentage}%` }} /></div>
             <p className="text-sm text-muted-foreground">{goal.completed ? "Completed" : `Due ${displayDate(goal.end_date)}`}</p>
           </Link>)}</div> : <div className="tracker-panel space-y-3 p-5"><p className="text-sm text-muted-foreground">Set a weekly or long-term target to see your progress here.</p><Link className="tracker-button" href="/goals">Create a goal</Link></div>}
         </section></aside>

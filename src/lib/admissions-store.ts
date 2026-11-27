@@ -3,7 +3,7 @@ import { mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import type { AdmissionsData, College, Supplement } from "./admissions-model.ts";
-import type { AdmissionsGoal } from "./goal-model.ts";
+import { admissionsGoalWithProgress, type AdmissionsGoal } from "./goal-model.ts";
 
 const directory = () => process.env.TRACKER_ADMISSIONS_DIR || join(process.cwd(), "data", "admissions");
 
@@ -71,6 +71,11 @@ export function readAdmissionsGoal(): AdmissionsGoal | null {
     const row = db.prepare("SELECT title, start_date, end_date, status FROM admissions_goal").get();
     return row ? { ...row } as AdmissionsGoal : null;
   });
+}
+
+export function readAdmissionsGoalProgress(supplements?: Supplement[]) {
+  const goal = readAdmissionsGoal();
+  return goal ? admissionsGoalWithProgress(goal, supplements ?? readAdmissions().supplements) : null;
 }
 
 export function saveAdmissionsGoal(goal: AdmissionsGoal) {

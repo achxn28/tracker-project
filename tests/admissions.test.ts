@@ -5,7 +5,7 @@ import { join } from "node:path";
 import test from "node:test";
 import { buildActionQueue } from "../src/lib/action-queue.ts";
 import { scheduledSupplements, type AdmissionsData } from "../src/lib/admissions-model.ts";
-import { completeSupplement, importAdmissions, readAdmissions, saveCollege, saveSupplement } from "../src/lib/admissions-store.ts";
+import { completeSupplement, importAdmissions, readAdmissions, readAdmissionsGoalProgress, saveAdmissionsGoal, saveCollege, saveSupplement } from "../src/lib/admissions-store.ts";
 import { calendarDeadlines } from "../src/lib/dashboard-calendar.ts";
 import { timelineRows } from "../src/lib/timeline-model.ts";
 
@@ -26,6 +26,9 @@ test("Admissions edits update the correct schedule and survive reimport", () => 
     };
     importAdmissions(seed);
     assert.deepEqual(readAdmissions(), seed);
+    saveAdmissionsGoal({ title: "Finish all supplements", start_date: "2026-11-26", end_date: "2026-12-24", status: "active" });
+    assert.equal(readAdmissionsGoalProgress()?.current, 0);
+    assert.equal(readAdmissionsGoalProgress()?.target_count, 1);
     saveCollege({ ...seed.colleges[0], deadline: "2027-01-03", submitted: true });
     const queue = (today: string) => buildActionQueue([], [], [], today, scheduledSupplements(readAdmissions()));
     assert.equal(queue("2026-12-13").length, 0);
@@ -37,6 +40,12 @@ test("Admissions edits update the correct schedule and survive reimport", () => 
     assert.equal(completeSupplement("essay"), true);
     assert.equal(completeSupplement("unknown"), false);
     assert.equal(queue("2026-12-22").length, 0);
+    assert.equal(readAdmissionsGoalProgress()?.current, 1);
+    assert.equal(readAdmissionsGoalProgress()?.completed, true);
+    assert.equal(readAdmissionsGoalProgress([
+      ...readAdmissions().supplements,
+      { ...seed.supplements[0], id: "undated", dueDate: null },
+    ])?.completed, false);
     importAdmissions(seed);
 
     const data = readAdmissions();

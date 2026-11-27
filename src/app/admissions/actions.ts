@@ -12,7 +12,7 @@ function field(form: FormData, name: string) {
 }
 
 function refresh() {
-  for (const path of ["/admissions", "/timeline", "/tasks", "/"]) revalidatePath(path);
+  for (const path of ["/admissions", "/goals", "/timeline", "/tasks", "/"]) revalidatePath(path);
 }
 
 export async function saveApplication(id: string | null, form: FormData) {
