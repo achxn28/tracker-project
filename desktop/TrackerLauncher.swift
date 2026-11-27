@@ -15,11 +15,11 @@ final class TrackerLauncher: NSObject, NSApplicationDelegate, WKNavigationDelega
     func applicationDidFinishLaunching(_ notification: Notification) {
         configureMenu()
         let visibleFrame = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1366, height: 850)
-        let width = min(1040, visibleFrame.width * 0.80)
-        let height = min(680, visibleFrame.height * 0.78)
+        let frame = visibleFrame.insetBy(dx: visibleFrame.width * 0.04, dy: visibleFrame.height * 0.04).integral
+        let style: NSWindow.StyleMask = [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: width, height: height),
-            styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
+            contentRect: NSWindow.contentRect(forFrameRect: frame, styleMask: style),
+            styleMask: style,
             backing: .buffered, defer: false
         )
         window.title = "Tracker"
@@ -27,9 +27,8 @@ final class TrackerLauncher: NSObject, NSApplicationDelegate, WKNavigationDelega
         window.isOpaque = false
         window.backgroundColor = .clear
         window.hasShadow = true
-        window.minSize = NSSize(width: min(640, width), height: min(480, height))
+        window.minSize = NSSize(width: min(640, frame.width), height: min(480, frame.height))
         window.isReleasedWhenClosed = false
-        window.center()
         self.window = window
         let glass = NSVisualEffectView()
         glass.material = .sidebar

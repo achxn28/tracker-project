@@ -6,7 +6,8 @@ its installed dependencies, production build, and ignored local settings. Your
 Supabase configuration, Google authorization, and local files stay in the
 checkout.
 
-Tracker opens in a compact, rounded window. The glass uses macOS's own
+Tracker opens in a rounded window that fills most of the available screen.
+The glass uses macOS's own
 window backdrop and does not request Screen Recording. If macOS asks for
 Desktop folder access, it is because the checkout is on Desktop. macOS
 manages that permission, and locally signed development builds can ask again
